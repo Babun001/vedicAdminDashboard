@@ -18,10 +18,10 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const { data: customers, loading, error, connected } = useSSE();
 
-  console.log("data ", customers);
+  // console.log("data ", customers);
   // console.log("loading ", loading);
-  console.log("error ", error);
-  console.log("connected ", connected);
+  // console.log("error ", error);
+  // console.log("connected ", connected);
 
 
   const { register, watch } = useForm<CustomerFilterSchema>({
