@@ -300,7 +300,7 @@ export const revenueChartData = [
 ];
 
 export const planDistributionData = [
-  // { name: "Free", value: 2, color: "#6d28d9" },
-  // { name: "Modern", value: 2, color: "#f59e0b" },
-  // { name: "Premium", value: 3, color: "#10b981" },
+  { name: "Free", value: 2, color: "#6d28d9" },
+  { name: "Modern", value: 2, color: "#f59e0b" },
+  { name: "Premium", value: 3, color: "#10b981" },
 ];

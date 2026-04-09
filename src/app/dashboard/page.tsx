@@ -142,9 +142,9 @@ export default function DashboardPage() {
                 outerRadius={70}
                 paddingAngle={4}
                 dataKey="value"
-              >
+              >{/*fill={entry.color} */}
                 {planDistributionData.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} />
+                  <Cell key={index}  /> 
                 ))}
               </Pie>
             </PieChart>
