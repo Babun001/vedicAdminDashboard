@@ -101,18 +101,18 @@ export async function generateReportPDF(
 
     const col1x = margin + 5;
     const col2x = margin + contentW / 2;
-    doc.text(`Name: ${customer.name}`, col1x, y + 15);
+    doc.text(`Name: ${customer.fullName}`, col1x, y + 15);
     doc.text(`Email: ${customer.email}`, col1x, y + 22);
-    doc.text(`Phone: ${customer.phone}`, col1x, y + 29);
-    doc.text(`Date of Birth: ${customer.dateOfBirth}`, col2x, y + 15);
-    doc.text(`Time of Birth: ${customer.timeOfBirth}`, col2x, y + 22);
-    doc.text(`Place of Birth: ${customer.cityOfBirth}, ${customer.countryOfBirth}`, col2x, y + 29);
+    // doc.text(`Phone: ${customer.phone}`, col1x, y + 29);
+    doc.text(`Date of Birth: ${customer.dob}`, col2x, y + 15);
+    doc.text(`Time of Birth: ${customer.tob}`, col2x, y + 22);
+    doc.text(`Place of Birth: ${customer.pobCity}`, col2x, y + 29);
 
     y += 44;
   }
 
   // ── Concern Box ────────────────────────────────────────────────────────────
-  if (customer?.primaryConcern) {
+  if (customer?.concern) {
     doc.setFillColor(255, 248, 230);
     doc.roundedRect(margin, y, contentW, 14, 2, 2, "F");
     doc.setDrawColor(251, 191, 36);
@@ -123,7 +123,7 @@ export async function generateReportPDF(
     doc.setFont("helvetica", "bold");
     doc.text(`Primary Concern: `, margin + 5, y + 9);
     doc.setFont("helvetica", "normal");
-    doc.text(customer.primaryConcern, margin + 40, y + 9);
+    doc.text(customer.concern, margin + 40, y + 9);
     y += 20;
   }
 
