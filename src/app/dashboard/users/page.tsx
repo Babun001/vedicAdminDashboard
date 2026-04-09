@@ -27,8 +27,8 @@ export default function UsersPage() {
   const filtered = useMemo(() => {
     return mockUsers.filter(u => {
       const q = (filters.search ?? "").toLowerCase();
-      const matchSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone.includes(q);
-      const matchPlan = filters.plan === "all" || u.plan === filters.plan;
+      const matchSearch = !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone.includes(q);
+      const matchPlan = filters.plan === "all" || u.planName === filters.plan;
       const matchStatus = filters.status === "all" || u.status === filters.status;
       return matchSearch && matchPlan && matchStatus;
     });
@@ -102,7 +102,7 @@ export default function UsersPage() {
                 </tr>
               ) : filtered.map((user) => (
                 <tr
-                  key={user.id}
+                  key={user._id}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   {/* User */}
@@ -110,15 +110,15 @@ export default function UsersPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-yellow-500 flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-white">
-                          {getInitials(user.name)}
+                          {getInitials(user.fullName)}
                         </span>
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 whitespace-nowrap">
-                          {user.name}
+                          {user.fullName}
                         </p>
                         <p className="text-xs text-gray-500">
-                          ID: {user.id}
+                          ID: {user._id}
                         </p>
                       </div>
                     </div>
@@ -133,24 +133,24 @@ export default function UsersPage() {
                   {/* Birth */}
                   <td className="px-4 py-3">
                     <p className="text-gray-700 text-xs whitespace-nowrap">
-                      {user.dateOfBirth} · {user.timeOfBirth}
+                      {user.dob} · {user.tob}
                     </p>
                     <p className="text-gray-500 text-xs">
-                      {user.cityOfBirth}, {user.countryOfBirth}
+                      {user.pobCity}, {user.pobCountry}
                     </p>
                   </td>
 
                   {/* Concern */}
                   <td className="px-4 py-3 max-w-[160px]">
                     <p className="text-gray-700 text-xs truncate">
-                      {user.primaryConcern}
+                      {user.concern}
                     </p>
                   </td>
 
                   {/* Plan */}
                   <td className="px-4 py-3">
-                    <Badge className={getPlanColor(user.plan)}>
-                      {user.plan}
+                    <Badge className={getPlanColor(user.planName)}>
+                      {user.planName}
                     </Badge>
                   </td>
 
