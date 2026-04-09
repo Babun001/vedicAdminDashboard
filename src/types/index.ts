@@ -16,20 +16,20 @@ export interface AdminUser {
 // ─── Platform User (logged-in users) ─────────────────────────────────────────
 
 export interface PlatformUser {
-  id: string;
-  name: string;
+  _id: string;
+  fullName: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  timeOfBirth: string;
-  placeOfBirth: string;
-  cityOfBirth: string;
-  countryOfBirth: string;
-  primaryConcern: string;
-  additionalNotes?: string;
-  plan: "free" | "modern" | "premium";
+  dob: string;
+  tob: string;
+  pobCity: string;
+  pobCountry: string;
+  currentCountry: string;
+  concern: string;
+  notes?: string;
+  planName: string;
   status: "active" | "inactive";
-  registeredAt: string;
+  createdAt: string;
   lastLogin: string;
   avatarUrl?: string;
 }
