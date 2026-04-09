@@ -24,7 +24,7 @@ export function ReportPreviewModal({ open, onClose, report, onSent }: ReportPrev
 
   if (!report) return null;
 
-  const customer = mockCustomers.find(c => c.userId === report.userId) ?? null;
+  const customer = mockCustomers.find(c => c._id === report.userId) ?? null;
 
   const handleDownloadPDF = async () => {
     setGenerating(true);
@@ -79,12 +79,12 @@ export function ReportPreviewModal({ open, onClose, report, onSent }: ReportPrev
             <User size={13} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium text-white">{customer.name}</p>
-            <p className="text-xs text-white/50">{customer.email} · {customer.phone}</p>
+            <p className="text-sm font-medium text-white">{customer.fullName}</p>
+            <p className="text-xs text-white/50">{customer.email} </p> {/* · {customer.phone} */}
           </div>
           <div className="ml-auto text-right hidden sm:block">
-            <p className="text-xs text-white/40">DOB: {customer.dateOfBirth}</p>
-            <p className="text-xs text-white/40">{customer.cityOfBirth}, {customer.countryOfBirth}</p>
+            <p className="text-xs text-white/40">DOB: {customer.dob}</p>
+            <p className="text-xs text-white/40">{customer.pobCity}, {customer.pobCountry}</p>
           </div>
         </div>
       )}
