@@ -96,7 +96,7 @@ export default function Setup2FAPage() {
                         placeholder="Enter 6-digit code"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="w-full border border-gray-300 rounded-xl px-4 py-2 text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full text-black border border-gray-300 rounded-xl px-4 py-2 text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 

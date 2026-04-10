@@ -79,7 +79,9 @@ export default function LoginPage() {
 
       // 🔐 EXISTING ADMIN → verify 2FA
       if (response.data?.requiresTwoFactor) {
-        setTempToken(response.data.tempToken);
+
+        console.log("2FA required. Temp token:", response.data);
+        // setTempToken(response.data.tempToken);
         setStep("2fa");
         return;
       }
