@@ -9,8 +9,10 @@ type SSEState = {
     connected: boolean;
 };
 
-const SSE_URL = "https://vedicbackend-4.onrender.com/api/admin/stream";
-const LEADS_URL = "https://vedicbackend-4.onrender.com/api/leads";
+// const SSE_URL = "https://vedicbackend-4.onrender.com/api/admin/stream";
+// const LEADS_URL = "https://vedicbackend-4.onrender.com/api/leads";
+const SSE_URL = "http://localhost:8080/api/admin/stream";
+const LEADS_URL = "http://localhost:8080/api/leads";
 
 console.log("SSE URL:", SSE_URL);
 console.log("LEADS URL:", LEADS_URL);

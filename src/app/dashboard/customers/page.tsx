@@ -14,6 +14,12 @@ import type { Customer } from "@/types";
 import { Search, Eye, ShoppingBag, Star, FileText } from "lucide-react";
 import { useSSE } from "@/hooks/useSSE";
 
+import {
+  useTotalRevenue,
+  useTotalCustomers,
+} from "@/store/useDashboardStore";
+
+
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const { data: customers, loading, error, connected } = useSSE();
@@ -22,6 +28,10 @@ export default function CustomersPage() {
   // console.log("loading ", loading);
   // console.log("error ", error);
   // console.log("connected ", connected);
+
+  const totalRevenue = useTotalRevenue();
+  const totalCustomers = useTotalCustomers();
+  const pendingCount = customers.filter((c) => c.paymentStatus === "pending").length;
 
 
   const { register, watch } = useForm<CustomerFilterSchema>({
@@ -32,18 +42,16 @@ export default function CustomersPage() {
   const filters = watch();
 
   const filtered = useMemo(() => {
-    return customers.filter(c => {
-      const q = (filters.search ?? "").toLowerCase();
-      const matchSearch = !q
-        || c.fullName.toLowerCase().includes(q)
-        || c.email.toLowerCase().includes(q);
-      const matchPlan = filters.plan === "all" || c.planName === filters.plan;
-      const matchStatus = filters.status === "all" || "" ///c.paymentStatus === filters.status;
-      return matchSearch && matchPlan && matchStatus;
-    });
-  }, [customers, filters]);
+  return customers.filter(c => {
+    const q = (filters.search ?? "").toLowerCase();
+    const matchSearch = !q || c.fullName.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+    const matchPlan   = filters.plan === "all" || c.planName === filters.plan;
+    const matchStatus = filters.status === "all" || c.paymentStatus === filters.status; // ✅
+    return matchSearch && matchPlan && matchStatus;
+  });
+}, [customers, filters]);
 
-  const totalRevenue = filtered.reduce((s, c) => s + (c.planPrice ?? 0), 0);
+  // const totalRevenue = filtered.reduce((s, c) => s + (c.planPrice ?? 0), 0);
 
   if (loading) {
     return (
@@ -73,9 +81,9 @@ export default function CustomersPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Customers", value: filtered.length, icon: <ShoppingBag size={16} />, color: "text-purple-600" },
+          { label: "Total Customers", value: totalCustomers, icon: <ShoppingBag size={16} />, color: "text-purple-600" },
           { label: "Total Revenue", value: formatCurrency(totalRevenue), icon: <Star size={16} />, color: "text-yellow-600" },
-          { label: "Pending Payment", value: filtered.filter(c => c.paymentStatus === "pending").length, icon: <FileText size={16} />, color: "text-green-600" },
+          { label: "Pending Payment", value: pendingCount, icon: <FileText size={16} />, color: "text-green-600" },
         ].map((card) => (
           <div key={card.label} className="bg-white border border-gray-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
             <div className={card.color}>{card.icon}</div>
@@ -98,9 +106,9 @@ export default function CustomersPage() {
           <Select
             options={[
               { value: "all", label: "All Plans" },
-              { value: "basic", label: "Basic" },
-              { value: "modern", label: "Modern" },
-              { value: "premium", label: "Premium" },
+              // { value: "basic", label: "Basic" }, 
+              { value: "Basic Horoscope", label: "Basic Horoscope" }, //Basic Horoscope
+              { value: "Divine Destiny Report", label: "Divine Destiny Report" }, //Divine Destiny Report
             ]}
             {...register("plan")}
           />

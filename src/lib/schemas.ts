@@ -33,7 +33,7 @@ export const reportSchema = z.object({
     .string()
     .min(50, "Report content must be at least 50 characters")
     .max(50000, "Report content is too long"),
-  template: z.enum(["free", "modern", "premium"], {
+  template: z.enum(["free", "Basic Horoscope", "Divine Destiny Report"], {
     errorMap: () => ({ message: "Please select a valid template" }),
   }),
   adminNotes: z.string().max(500, "Notes must be under 500 characters").optional(),
@@ -43,8 +43,8 @@ export const reportSchema = z.object({
 
 export const customerFilterSchema = z.object({
   search: z.string().optional(),
-  plan: z.enum(["all", "free", "modern", "premium"]).default("all"),
-  status: z.enum(["all", "active", "expired", "cancelled"]).default("all"),
+  plan: z.enum(["all", "free", "Basic Horoscope", "Divine Destiny Report"]).default("all"),
+  status: z.enum(["all", "pending", "failed", "paid"]).default("all"),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
 });

@@ -290,13 +290,13 @@ export const mockStats: DashboardStats = {
 // ─── Revenue Chart Data ───────────────────────────────────────────────────────
 
 export const revenueChartData = [
-  // { month: "Jan", revenue: 9998, users: 2 },
-  // { month: "Feb", revenue: 4999, users: 1 },
-  // { month: "Mar", revenue: 1999, users: 1 },
-  // { month: "Apr", revenue: 1999, users: 1 },
-  // { month: "May", revenue: 0, users: 1 },
-  // { month: "Jun", revenue: 0, users: 0 },
-  // { month: "Jul", revenue: 0, users: 1 },
+  { month: "Jan", revenue: 9998, users: 2 },
+  { month: "Feb", revenue: 4999, users: 1 },
+  { month: "Mar", revenue: 1999, users: 1 },
+  { month: "Apr", revenue: 1999, users: 1 },
+  { month: "May", revenue: 0, users: 1 },
+  { month: "Jun", revenue: 0, users: 0 },
+  { month: "Jul", revenue: 0, users: 1 },
 ];
 
 export const planDistributionData = [
