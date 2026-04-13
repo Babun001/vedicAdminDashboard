@@ -63,7 +63,7 @@ export interface Transaction {
   userId: string;
   userName: string;
   userEmail: string;
-  plan: "free" | "modern" | "premium";
+  plan: "free" | "Basic Horoscope" | "Divine Destiny Report";
   amount: number;
   currency: string;
   status: "success" | "pending" | "failed" | "refunded";
@@ -75,7 +75,7 @@ export interface Transaction {
 
 // ─── Report ───────────────────────────────────────────────────────────────────
 
-export type ReportTemplate = "free" | "modern" | "premium";
+export type ReportTemplate = "free" | "Basic Horoscope" | "Divine Destiny Report";
 
 export interface Report {
   id: string;
