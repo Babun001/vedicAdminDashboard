@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { RichEditor } from "@/components/editor/rich-editor";
 import { ReportPreviewModal } from "@/components/dashboard/report-preview-modal";
-import type { Report } from "@/types";
+import type { Report, ReportTemplate } from "@/types";
 import {
   Sparkles, FileText, PenLine, User, Eye,
   Download, Send, CheckCircle2, Star
@@ -30,8 +30,8 @@ const TEMPLATES = [
     badge: "text-white/60 bg-white/5 border-white/10",
   },
   {
-    id: "modern" as const,
-    label: "Modern",
+    id: "Basic Horoscope" as const,
+    label: "Basic Horoscope",
     desc: "Detailed analysis with remedies",
     icon: <PenLine size={20} />,
     color: "border-white/20 bg-white/5",
@@ -39,20 +39,20 @@ const TEMPLATES = [
     badge: "text-cosmos-300 bg-cosmos-500/10 border-cosmos-500/30",
   },
   {
-    id: "premium" as const,
-    label: "Premium",
+    id: "Divine Destiny Report" as const,
+    label: "Divine Destiny Report",
     desc: "Comprehensive Jyotish report with full analysis",
     icon: <Sparkles size={20} />,
     color: "border-white/20 bg-white/5",
     activeColor: "border-gold-500 bg-gold-500/10 shadow-gold",
     badge: "text-gold-400 bg-gold-500/10 border-gold-500/30",
   },
-];
+] satisfies { id: ReportTemplate; label: string; desc: string; icon: JSX.Element; color: string; activeColor: string; badge: string }[];
 
 const STARTER_TEMPLATES: Record<string, string> = {
   free: `<h2>Birth Chart Overview</h2><p>Based on the birth details provided, this report presents a concise analysis of the key planetary positions and their influences on your life.</p><h2>Key Planetary Positions</h2><ul><li>Sun Sign:</li><li>Moon Sign:</li><li>Ascendant (Lagna):</li></ul><h2>Guidance</h2><p>Add your guidance here.</p>`,
-  modern: `<h2>Natal Chart Analysis</h2><p>This Modern Report presents a detailed Vedic Jyotish analysis encompassing your natal chart, current planetary transits, and upcoming Dasha periods.</p><h2>Lagna & Planetary Strength</h2><p>Describe the ascendant and key planet positions here.</p><h2>Career & Finance</h2><p>Analysis of the 10th and 2nd house lords...</p><h2>Relationships</h2><p>Analysis of the 7th house...</p><h2>Remedies</h2><ul><li>Gemstone recommendation:</li><li>Mantra:</li><li>Charity:</li></ul>`,
-  premium: `<h2>Executive Summary</h2><p>This Premium Vedic Astrology Report provides the most comprehensive analysis of your birth chart, combining classical Parashari Jyotish with Jaimini techniques.</p><h2>Natal Chart — Detailed Analysis</h2><p>Ascendant, planets, houses...</p><h2>Vimshottari Dasha</h2><p>Current Dasha period and its implications...</p><h2>Career & Dharma</h2><p>Detailed 10th house analysis...</p><h2>Relationships & Marriage</h2><p>7th house, Venus, Jaimini analysis...</p><h2>Health & Wellness</h2><p>6th house, Moon, Ascendant lord...</p><h2>Spiritual Path</h2><p>9th house, 12th house, Ketu...</p><h2>Remedies & Prescriptions</h2><ul><li><strong>Gemstone:</strong></li><li><strong>Yantra:</strong></li><li><strong>Mantra:</strong></li><li><strong>Fasting:</strong></li><li><strong>Charity:</strong></li></ul><h2>Conclusion</h2><p>Summary and blessings...</p>`,
+  "Basic Horoscope": `<h2>Natal Chart Analysis</h2><p>This Basic Horoscope Report presents a detailed Vedic Jyotish analysis encompassing your natal chart, current planetary transits, and upcoming Dasha periods.</p><h2>Lagna & Planetary Strength</h2><p>Describe the ascendant and key planet positions here.</p><h2>Career & Finance</h2><p>Analysis of the 10th and 2nd house lords...</p><h2>Relationships</h2><p>Analysis of the 7th house...</p><h2>Remedies</h2><ul><li>Gemstone recommendation:</li><li>Mantra:</li><li>Charity:</li></ul>`,
+  "Divine Destiny Report": `<h2>Executive Summary</h2><p>This Divine Destiny Report provides the most comprehensive analysis of your birth chart, combining classical Parashari Jyotish with Jaimini techniques.</p><h2>Natal Chart — Detailed Analysis</h2><p>Ascendant, planets, houses...</p><h2>Vimshottari Dasha</h2><p>Current Dasha period and its implications...</p><h2>Career & Dharma</h2><p>Detailed 10th house analysis...</p><h2>Relationships & Marriage</h2><p>7th house, Venus, Jaimini analysis...</p><h2>Health & Wellness</h2><p>6th house, Moon, Ascendant lord...</p><h2>Spiritual Path</h2><p>9th house, 12th house, Ketu...</p><h2>Remedies & Prescriptions</h2><ul><li><strong>Gemstone:</strong></li><li><strong>Yantra:</strong></li><li><strong>Mantra:</strong></li><li><strong>Fasting:</strong></li><li><strong>Charity:</strong></li></ul><h2>Conclusion</h2><p>Summary and blessings...</p>`,
 };
 
 export default function CreateReportPage() {
@@ -61,7 +61,7 @@ export default function CreateReportPage() {
 
   console.log("Customers in CreateReportPage:", customers);
 
-  
+
   const [previewReport, setPreviewReport] = useState<Report | null>(null);
   const [created, setCreated] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -79,7 +79,7 @@ export default function CreateReportPage() {
       userId: "",
       title: "",
       content: "",
-      template: "Basic Horoscope",
+      template: "free",
       adminNotes: "",
     },
   });
