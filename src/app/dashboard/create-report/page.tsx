@@ -79,7 +79,7 @@ export default function CreateReportPage() {
       userId: "",
       title: "",
       content: "",
-      template: "premium",
+      template: "Basic Horoscope",
       adminNotes: "",
     },
   });
