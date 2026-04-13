@@ -273,3 +273,22 @@ select.admin-inputs {
   transition: border-color 0.2s;
   display: flex;
 }
+
+
+.bg-login-top, .bg-login-bottom {
+  position: absolute;
+  width: 40rem;
+  height: auto;
+  opacity: 0.3;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+}
+
+.bg-login-top{
+  top: -10rem;
+  left: -10rem;
+}
+
+.bg-login-bottom {
+  bottom: -10rem;
+  right: -10rem;
+}

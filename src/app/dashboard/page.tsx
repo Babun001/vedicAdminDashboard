@@ -12,6 +12,7 @@ import {
   Users, ShoppingBag, IndianRupee, FileText,
   TrendingUp, Star, Sparkles
 } from "lucide-react";
+import { useAuthStore } from "@/store/auth-store";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -32,13 +33,19 @@ export default function DashboardPage() {
   const recentTransactions = mockTransactions.slice(0, 5);
   const recentReports = mockReports.slice(0, 4);
 
+  const { admin: user, fetchAdmin, logout } = useAuthStore((state) => ({
+    admin: state.admin,
+    fetchAdmin: state.fetchAdmin,
+    logout: state.logout,
+  }));
+
   return (
     <div className="space-y-6 animate-[fadeIn_0.4s_ease]">
       {/* Welcome banner */}
       <div className="relative bg-white border border-gray-200 rounded-2xl px-6 py-5 overflow-hidden shadow-sm">
         {/* subtle background symbol */}
         <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-200 text-8xl font-display select-none pointer-events-none">☉</div>
-        <p className="text-xs text-[#DFAF07] font-body tracking-widest uppercase mb-1"> Namaste, Admin</p>
+        <p className="text-xs text-[#DFAF07] font-body tracking-widest uppercase mb-1"> Namaste, {user?.name || "Admin"}</p>
         <h2 className="text-2xl font-display font-bold text-gray-900">Welcome to Vedic Remedies Portal</h2>
         <p className="text-sm text-gray-500 mt-1">Here&apos;s what&apos;s happening with your astrology practice today.</p>
       </div>
@@ -144,7 +151,7 @@ export default function DashboardPage() {
                 dataKey="value"
               >{/*fill={entry.color} */}
                 {planDistributionData.map((entry, index) => (
-                  <Cell key={index}  /> 
+                  <Cell key={index} />
                 ))}
               </Pie>
             </PieChart>

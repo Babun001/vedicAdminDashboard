@@ -143,6 +143,20 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen starfield-bg flex items-center justify-center p-4 relative overflow-hidden">
+    <Image
+      src="/assets/compress2.png"
+      alt="logo"
+      className="bg-login-top"
+      width={170}
+      height={60}
+    />
+    <Image
+      src="/assets/compress2.png"
+      alt="logo"
+      className="bg-login-bottom"
+      width={170}
+      height={60}
+    />
       {/* Card */}
       <div className="relative w-full max-w-md">
         {/* Glow behind card */}
