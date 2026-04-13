@@ -48,8 +48,8 @@ export function getInitials(name: string): string {
 
 export function getPlanColor(plan: string): string {
   switch (plan) {
-    case "premium": return "text-gold-400 bg-gold-400/10 border-gold-400/30";
-    case "modern":  return "text-cosmos-300 bg-cosmos-500/10 border-cosmos-400/30";
+    case "Divine Destiny Report": return "text-gold-400 bg-gold-400/10 border-gold-400/30";
+    case "Basic Horoscope":  return "text-cosmos-300 bg-cosmos-500/10 border-cosmos-400/30";
     case "free":    return "text-ink-200 bg-white/5 border-white/10";
     default:        return "text-ink-200 bg-white/5 border-white/10";
   }
