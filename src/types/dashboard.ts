@@ -2,7 +2,7 @@
 
 export interface Customer {
   _id: string;
-  fullName: string;
+  name: string;
   email: string;
   planName: string;
   planPrice: number;

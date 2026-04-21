@@ -87,20 +87,20 @@ export function UserDetailModal({
         {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xl">
-            {getInitials(user.fullName)}
+            {getInitials(user.name)}
           </div>
 
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-semibold text-gray-900">
-              {user.fullName}
+              {user.name}
             </h3>
             <p className="text-sm text-gray-500">{user.email}</p>
 
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <Badge className={getPlanColor(user.planName)}>
+              {/* <Badge className={getPlanColor(user.planName)}>
                 <Star size={9} className="mr-1" />
                 {user.planName.charAt(0).toUpperCase() + user.planName.slice(1)} Plan
-              </Badge>
+              </Badge> */}
 
               {/* {isCustomer ? (
                 <Badge className={getStatusColor(customer.status)}>
@@ -122,7 +122,7 @@ export function UserDetailModal({
               Contact
             </p>
             <InfoRow icon={<Mail size={13} />} label="Email" value={user.email} />
-            {/* <InfoRow icon={<Phone size={13} />} label="Phone" value={user.phone} /> */}
+            <InfoRow icon={<Phone size={13} />} label="Phone" value={user?.phone ?? "N/A"} />
           </div>
 
           {isCustomer && (

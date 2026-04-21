@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userFilterSchema, type UserFilterSchema } from "@/lib/schemas";
@@ -13,9 +13,30 @@ import { Select } from "@/components/ui/select";
 import { UserDetailModal } from "@/components/dashboard/user-detail-modal";
 import type { PlatformUser } from "@/types";
 import { Search, Eye, Users } from "lucide-react";
+import axiosInstanceClient from "@/services/client.services";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
+  const [allUsers, setAllUsers] = useState<PlatformUser[]>([]); 
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axiosInstanceClient.get("/admin/get-all-users");
+      const data = res.data;
+      console.log("Fetched users:", data);
+      if (data.success) {
+        setAllUsers(data.data.users);
+      } else {
+        console.error("Failed to fetch users:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+  
+   useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const { register, watch } = useForm<UserFilterSchema>({
     resolver: zodResolver(userFilterSchema),
@@ -25,14 +46,14 @@ export default function UsersPage() {
   const filters = watch();
 
   const filtered = useMemo(() => {
-    return mockUsers.filter(u => {
+    return allUsers.filter(u => {
       const q = (filters.search ?? "").toLowerCase();
-      const matchSearch = !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone.includes(q);
-      const matchPlan = filters.plan === "all" || u.planName === filters.plan;
-      const matchStatus = filters.status === "all" || u.status === filters.status;
-      return matchSearch && matchPlan && matchStatus;
+      const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone.toLowerCase().includes(q);
+      // const matchPlan = filters.plan === "all" || u.planName === filters.plan;
+      // const matchStatus = filters.status === "all" || u.status === filters.status;
+      return matchSearch; // && matchPlan && matchStatus;
     });
-  }, [filters]);
+  }, [filters, allUsers]);
 
   return (
     <div className="space-y-5 animate-[fadeIn_0.4s_ease]">
@@ -49,13 +70,13 @@ export default function UsersPage() {
 
       {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid">
           <Input
             placeholder="Search name, email, phone…"
             icon={<Search size={14} />}
             {...register("search")}
           />
-          <Select
+          {/* <Select
             options={[
               { value: "all", label: "All Plans" },
               { value: "free", label: "Free" },
@@ -71,7 +92,7 @@ export default function UsersPage() {
               { value: "inactive", label: "Inactive" },
             ]}
             {...register("status")}
-          />
+          /> */}
         </div>
       </div>
 
@@ -82,7 +103,8 @@ export default function UsersPage() {
 
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                {["User", "Contact", "Birth Details", "Concern", "Plan", "Status", "Last Login", "Actions"].map(h => (
+                {/* ["User", "Contact", "Birth Details", "Concern", "Plan", "Status", "Last Login", "Actions"] */}
+                {["User", "Contact", "Birth Details","Actions"].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] text-gray-500 font-body tracking-widest uppercase whitespace-nowrap"
@@ -110,12 +132,12 @@ export default function UsersPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-yellow-500 flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-white">
-                          {getInitials(user.fullName)}
+                          {getInitials(user.name || "Unknown User")}
                         </span>
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 whitespace-nowrap">
-                          {user.fullName}
+                          {user.name || "Unknown User"}
                         </p>
                         <p className="text-xs text-gray-500">
                           ID: {user._id}
@@ -141,32 +163,32 @@ export default function UsersPage() {
                   </td>
 
                   {/* Concern */}
-                  <td className="px-4 py-3 max-w-[160px]">
+                  {/* <td className="px-4 py-3 max-w-[160px]">
                     <p className="text-gray-700 text-xs truncate">
                       {user.concern}
                     </p>
-                  </td>
+                  </td> */}
 
                   {/* Plan */}
-                  <td className="px-4 py-3">
+                  {/* <td className="px-4 py-3">
                     <Badge className={getPlanColor(user.planName)}>
                       {user.planName}
                     </Badge>
-                  </td>
+                  </td> */}
 
                   {/* Status */}
-                  <td className="px-4 py-3">
+                  {/* <td className="px-4 py-3">
                     <Badge className={getStatusColor(user.status)}>
                       {user.status}
                     </Badge>
-                  </td>
+                  </td> */}
 
                   {/* Last login */}
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  {/* <td className="px-4 py-3 whitespace-nowrap">
                     <p className="text-gray-500 text-xs">
                       {formatDateTime(user.lastLogin)}
                     </p>
-                  </td>
+                  </td> */}
 
                   {/* Actions */}
                   <td className="px-4 py-3">

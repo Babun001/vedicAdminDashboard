@@ -17,7 +17,7 @@ export interface AdminUser {
 
 export interface PlatformUser {
   _id: string;
-  fullName: string;
+  name: string;
   email: string;
   phone: string;
   dob: string;
@@ -39,8 +39,9 @@ export interface PlatformUser {
 // types/index.ts
 export type Customer = {
   _id: string;
-  fullName: string;
+  name: string;
   email: string;
+  phone: string;
   gender: string;
   dob: string;
   tob: string;
