@@ -44,7 +44,7 @@ export default function CustomersPage() {
   const filtered = useMemo(() => {
   return customers.filter(c => {
     const q = (filters.search ?? "").toLowerCase();
-    const matchSearch = !q || c.fullName.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+    const matchSearch = !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
     const matchPlan   = filters.plan === "all" || c.planName === filters.plan;
     const matchStatus = filters.status === "all" || c.paymentStatus === filters.status; // ✅
     return matchSearch && matchPlan && matchStatus;
@@ -156,11 +156,11 @@ export default function CustomersPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-500 to-purple-500 flex items-center justify-center shrink-0">
                           <span className="text-xs font-bold text-white">
-                            {getInitials(c.fullName)}
+                            {getInitials(c.name)}
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{c.fullName}</p>
+                          <p className="font-medium text-gray-900">{c.name}</p>
                           <p className="text-xs text-gray-500">{c.email}</p>
                         </div>
                       </div>

@@ -98,7 +98,7 @@ export default function CreateReportPage() {
   const buildReport = (data: ReportSchema): Report => ({
     id: `r-${Date.now()}`,
     userId: data.userId,
-    userName: selectedCustomer?.fullName ?? "Unknown",
+    userName: selectedCustomer?.name ?? "Unknown",
     userEmail: selectedCustomer?.email ?? "",
     title: data.title,
     content: data.content,
@@ -198,7 +198,7 @@ export default function CreateReportPage() {
                     { value: "", label: "— Choose a client —" },
                     ...customers.map(c => ({
                       value: c._id,
-                      label: `${c.fullName} (${c.planName})`,
+                      label: `${c.name} (${c.planName})`,
                     })),
                   ]}
                 />
@@ -207,7 +207,7 @@ export default function CreateReportPage() {
 
             {selectedCustomer && (
               <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-xl">
-                <p className="text-xs font-medium text-gray-900">{selectedCustomer.fullName}</p>
+                <p className="text-xs font-medium text-gray-900">{selectedCustomer.name}</p>
                 <p className="text-[10px] text-gray-500">{selectedCustomer.email}</p>
                 <p className="text-[10px] text-gray-500 mt-0.5">
                   DOB: {selectedCustomer.dob} · {selectedCustomer.tob} · {selectedCustomer.pobCity}
