@@ -193,7 +193,7 @@ export default function DashboardPage() {
                     className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-900 truncate">{c.fullName}</p>
+                      <p className="text-sm text-gray-900 truncate">{c.name}</p>
                       <p className="text-xs text-gray-500">{c.email}</p>
                     </div>
                     <div className="text-right shrink-0 ml-3">
