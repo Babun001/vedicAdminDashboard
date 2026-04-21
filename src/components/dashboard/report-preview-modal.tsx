@@ -79,7 +79,7 @@ export function ReportPreviewModal({ open, onClose, report, onSent }: ReportPrev
             <User size={13} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium text-white">{customer.fullName}</p>
+            <p className="text-sm font-medium text-white">{customer.name}</p>
             <p className="text-xs text-white/50">{customer.email} </p> {/* · {customer.phone} */}
           </div>
           <div className="ml-auto text-right hidden sm:block">
