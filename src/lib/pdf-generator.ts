@@ -101,7 +101,7 @@ export async function generateReportPDF(
 
     const col1x = margin + 5;
     const col2x = margin + contentW / 2;
-    doc.text(`Name: ${customer.fullName}`, col1x, y + 15);
+    doc.text(`Name: ${customer.name}`, col1x, y + 15);
     doc.text(`Email: ${customer.email}`, col1x, y + 22);
     // doc.text(`Phone: ${customer.phone}`, col1x, y + 29);
     doc.text(`Date of Birth: ${customer.dob}`, col2x, y + 15);
