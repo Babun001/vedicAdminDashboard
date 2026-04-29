@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// ─── Auth Schemas ─────────────────────────────────────────────────────────────
 
 export const loginSchema = z.object({
   email: z
@@ -21,7 +20,6 @@ export const twoFASchema = z.object({
     .regex(/^\d{6}$/, "Code must contain only numbers"),
 });
 
-// ─── Report Schema ────────────────────────────────────────────────────────────
 
 export const reportSchema = z.object({
   userId: z.string().min(1, "Please select a client"),
@@ -32,14 +30,13 @@ export const reportSchema = z.object({
   content: z
     .string()
     .min(50, "Report content must be at least 50 characters")
-    .max(50000, "Report content is too long"),
+    .max(500000, "Report content is too long test"),
   template: z.enum(["free", "Basic Horoscope", "Divine Destiny Report"], {
     errorMap: () => ({ message: "Please select a valid template" }),
   }),
   adminNotes: z.string().max(500, "Notes must be under 500 characters").optional(),
 });
 
-// ─── Customer Filter Schema ───────────────────────────────────────────────────
 
 export const customerFilterSchema = z.object({
   search: z.string().optional(),
@@ -49,7 +46,6 @@ export const customerFilterSchema = z.object({
   dateTo: z.string().optional(),
 });
 
-// ─── Transaction Filter Schema ────────────────────────────────────────────────
 
 export const transactionFilterSchema = z.object({
   search: z.string().optional(),
@@ -59,7 +55,6 @@ export const transactionFilterSchema = z.object({
   dateTo: z.string().optional(),
 });
 
-// ─── User Filter Schema ───────────────────────────────────────────────────────
 
 export const userFilterSchema = z.object({
   search: z.string().optional(),
@@ -67,7 +62,6 @@ export const userFilterSchema = z.object({
   status: z.enum(["all", "active", "inactive"]).default("all"),
 });
 
-// ─── Types inferred from schemas ─────────────────────────────────────────────
 
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type TwoFASchema = z.infer<typeof twoFASchema>;

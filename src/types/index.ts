@@ -39,6 +39,7 @@ export interface PlatformUser {
 // types/index.ts
 export type Customer = {
   _id: string;
+  fullName: string;
   name: string;
   email: string;
   phone: string;
