@@ -30,7 +30,7 @@ export const reportSchema = z.object({
   content: z
     .string()
     .min(50, "Report content must be at least 50 characters")
-    .max(500000, "Report content is too long test"),
+    .max(100000000, "Report content is too long"),
   template: z.enum(["free", "Basic Horoscope", "Divine Destiny Report"], {
     errorMap: () => ({ message: "Please select a valid template" }),
   }),
