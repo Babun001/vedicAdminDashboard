@@ -52,6 +52,7 @@ export interface PlatformUser {
   pobCountry?: string;
   tob?: string;
   phone?: string;
+  notes?: string;
   // previously missing fields — now optional
   concern?: string;
   planName?: string;

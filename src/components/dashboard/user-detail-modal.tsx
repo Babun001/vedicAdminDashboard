@@ -87,7 +87,7 @@ export function UserDetailModal({
         {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xl">
-            {getInitials(user.name)}
+            {getInitials(user.name || "Unknown User")}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -143,8 +143,8 @@ export function UserDetailModal({
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
             <div>
-              <InfoRow icon={<Calendar size={13} />} label="Date of Birth" value={formatDate(user.dob)} />
-              <InfoRow icon={<Clock size={13} />} label="Time of Birth" value={user.tob} />
+              <InfoRow icon={<Calendar size={13} />} label="Date of Birth" value={formatDate(user.dob ?? "")} />
+              <InfoRow icon={<Clock size={13} />} label="Time of Birth" value={user.tob ?? "N/A"} />
             </div>
             <div>
               <InfoRow icon={<MapPin size={13} />} label="Place of Birth" value={user.pobCity} />
@@ -159,14 +159,14 @@ export function UserDetailModal({
           </p>
           <InfoRow icon={<Star size={13} />} label="Primary Concern" value={user.concern} />
           {user.notes && (
-            <InfoRow icon={<StickyNote size={13} />} label="Additional Notes" value={user.notes} />
+            <InfoRow icon={<StickyNote size={13} />} label="Additional Notes" value={user.notes ?? ""} />
           )}
         </div>
 
         {!isCustomer && (
           <div className="mt-4 grid grid-cols-2 gap-x-6">
-            <InfoRow icon={<Clock size={13} />} label="Registered" value={formatDateTime(platformUser.createdAt)} />
-            <InfoRow icon={<User size={13} />} label="Last Login" value={formatDateTime(platformUser.lastLogin)} />
+            <InfoRow icon={<Clock size={13} />} label="Registered" value={formatDateTime(platformUser.createdAt ?? "")} />
+            <InfoRow icon={<User size={13} />} label="Last Login" value={formatDateTime(platformUser.lastLogin ?? "")} />
           </div>
         )}
       </div>
