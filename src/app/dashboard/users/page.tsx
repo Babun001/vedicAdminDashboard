@@ -13,30 +13,39 @@ import { Select } from "@/components/ui/select";
 import { UserDetailModal } from "@/components/dashboard/user-detail-modal";
 import type { PlatformUser } from "@/types";
 import { Search, Eye, Users } from "lucide-react";
-import axiosInstanceClient from "@/services/client.services";
+import { useUsersStore } from "@/store/useUsersStore";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
-  const [allUsers, setAllUsers] = useState<PlatformUser[]>([]); 
+  // const [allUsers, setAllUsers] = useState<PlatformUser[]>([]);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await axiosInstanceClient.get("/admin/get-all-users");
-      const data = res.data;
-      console.log("Fetched users:", data);
-      if (data.success) {
-        setAllUsers(data.data.users);
-      } else {
-        console.error("Failed to fetch users:", data.message);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-  
-   useEffect(() => {
-    fetchUsers();
+  const { users, loading, fetchUsers } = useUsersStore();
+
+
+  const allUsers = useUsersStore((state) => state.users);
+
+  useEffect(() => {
+    fetchUsers(); // safe to call in multiple components — only hits API once
   }, []);
+
+  // const fetchUsers = async () => {
+  //   try {
+  //     const res = await axiosInstanceClient.get("/admin/get-all-users");
+  //     const data = res.data;
+  //     console.log("Fetched users:", data);
+  //     if (data.success) {
+  //       setAllUsers(data.data.users);
+  //     } else {
+  //       console.error("Failed to fetch users:", data.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching users:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchUsers();
+  // }, []);
 
   const { register, watch } = useForm<UserFilterSchema>({
     resolver: zodResolver(userFilterSchema),
@@ -104,7 +113,7 @@ export default function UsersPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 {/* ["User", "Contact", "Birth Details", "Concern", "Plan", "Status", "Last Login", "Actions"] */}
-                {["User", "Contact", "Birth Details","Actions"].map(h => (
+                {["User", "Contact", "Birth Details", "Actions"].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] text-gray-500 font-body tracking-widest uppercase whitespace-nowrap"

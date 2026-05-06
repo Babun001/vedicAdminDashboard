@@ -20,6 +20,7 @@ import {
   useDashboardStats,
 } from "@/store/useDashboardStore";
 import { formatCurrency as fc } from "@/lib/utils";
+import { useUsersStore } from "@/store/useUsersStore";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -37,6 +38,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function DashboardPage() {
+  const {users, fetchUsers} = useUsersStore();
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
   const recentTransactions = mockTransactions.slice(0, 5);
   const recentReports = mockReports.slice(0, 4);
 
@@ -80,13 +87,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           title="Total Users"
-          value={stats.totalUsers}
+          value={users.length}
           change={stats.usersGrowth}
           icon={<Users size={18} />}
           accent="cosmos"
         />
         <StatCard
-          title="Customers"
+          title="Total Orders"
           value={stats.totalCustomers}
           icon={<ShoppingBag size={18} />}
           accent="jade"

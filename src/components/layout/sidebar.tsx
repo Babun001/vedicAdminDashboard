@@ -31,7 +31,7 @@ export function Sidebar() {
   const baseNavItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/users", label: "Users", icon: Users },
-    { href: "/dashboard/customers", label: "Customers", icon: ShoppingBag },
+    { href: "/dashboard/customers", label: "Orders", icon: ShoppingBag },
     { href: "/dashboard/transactions", label: "Transactions", icon: CreditCard },
     { href: "/dashboard/reports", label: "All Reports", icon: FileText },
     { href: "/dashboard/create-report", label: "Create Report", icon: PlusSquare },
