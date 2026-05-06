@@ -172,28 +172,38 @@ import { Badge } from "@/components/ui/badge";
 import { getReportStatusColor, getPlanColor, formatDateTime } from "@/lib/utils";
 import { generateReportPDF } from "@/lib/pdf-generator";
 import { mockCustomers } from "@/lib/mock-data";
-import type { Report } from "@/types";
+import type { Customer, Report } from "@/types";
 import { Download, Send, FileText, User, Calendar, Sparkles } from "lucide-react";
 
 interface ReportPreviewModalProps {
   open: boolean;
   onClose: () => void;
   report: Report | null;
+  customer?: Customer | null;
   onSent?: (reportId: string) => void;
 }
 
-export function ReportPreviewModal({ open, onClose, report, onSent }: ReportPreviewModalProps) {
+export function ReportPreviewModal({ open, onClose, report, customer, onSent }: ReportPreviewModalProps) {
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sent, setSent] = useState(false);
 
   if (!report) return null;
 
-  const customer = mockCustomers.find(c => c._id === report.userId) ?? null;
+  // const customer = mockCustomers.find(c => c._id === report.userId) ?? null;
 
   const handleDownloadPDF = async () => {
     setGenerating(true);
     try {
+      // await generateReportPDF(report, customer);
+      if (!report) return;
+
+      const customer = {
+        name: report.userName,
+        email: report.userEmail,
+        fullName: report.userName,
+      } as unknown as Customer;
+
       await generateReportPDF(report, customer);
     } finally {
       setGenerating(false);
@@ -335,7 +345,7 @@ export function ReportPreviewModal({ open, onClose, report, onSent }: ReportPrev
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
-            onClick={handleDownloadPDF} 
+            onClick={handleDownloadPDF}
             loading={generating}
             disabled={generating}
           >

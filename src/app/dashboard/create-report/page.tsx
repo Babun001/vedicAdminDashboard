@@ -319,7 +319,7 @@
 
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { reportSchema, type ReportSchema } from "@/lib/schemas";
@@ -333,6 +333,7 @@ import { Badge } from "@/components/ui/badge";
 import { RichEditor } from "@/components/editor/rich-editor";
 import { ReportPreviewModal } from "@/components/dashboard/report-preview-modal";
 import type { Report, ReportTemplate } from "@/types";
+import { mockCustomers } from "@/lib/mock-data";
 import {
   Sparkles, FileText, PenLine, User, Eye,
   Download, Send, CheckCircle2, Star,
@@ -682,6 +683,11 @@ export default function CreateReportPage() {
     }
   };
 
+  // const selectedCustomer = useMemo(() => {
+  //   if (!selectedReport) return null;
+  //   return mockCustomers.find(c => c.email === selectedReport.userEmail) ?? null;
+  // }, [selectedReport]);
+
   return (
     <div className="mx-auto space-y-6 animate-[fadeIn_0.4s_ease]">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -867,6 +873,7 @@ export default function CreateReportPage() {
         open={!!previewReport && created}
         onClose={() => setCreated(false)}
         report={previewReport}
+        customer={selectedCustomer}
       />
     </div>
   );

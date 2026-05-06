@@ -1,6 +1,7 @@
 "use client";
 
 import type { Report, Customer } from "@/types";
+// import { report } from "process";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COLOUR PALETTE  – Cosmic Remedies brand
@@ -147,12 +148,75 @@ function registerFonts(doc: import("jspdf").jsPDF, fonts: LoadedFonts): void {
 // ─────────────────────────────────────────────────────────────────────────────
 // IMAGE COMPRESS HELPER  (for inline report images)
 // ─────────────────────────────────────────────────────────────────────────────
+// async function compressImage(
+//   src: string, adminW?: number, adminH?: number,
+// ): Promise<CompressedImage> {
+//   return new Promise((resolve, reject) => {
+//     const img = new Image();
+//     img.onload = () => {
+//       const { naturalWidth: nW, naturalHeight: nH } = img;
+//       let cW: number, cH: number;
+//       if (adminW && adminH) { cW = adminW; cH = adminH; }
+//       else if (adminW) { cW = adminW; cH = Math.round((nH / nW) * adminW); }
+//       else if (adminH) { cH = adminH; cW = Math.round((nW / nH) * adminH); }
+//       else {
+//         const scale = Math.min(1, MAX_PX / Math.max(nW, nH));
+//         cW = Math.round(nW * scale); cH = Math.round(nH * scale);
+//       }
+//       cW = Math.max(Math.round(cW), 1);
+//       cH = Math.max(Math.round(cH), 1);
+
+//       const canvas = document.createElement("canvas");
+//       canvas.width = cW; canvas.height = cH;
+//       const ctx = canvas.getContext("2d");
+//       if (!ctx) { reject(new Error("Canvas 2D unavailable")); return; }
+//       ctx.fillStyle = "#ffffff";
+//       ctx.fillRect(0, 0, cW, cH);
+//       ctx.drawImage(img, 0, 0, cW, cH);
+//       resolve({
+//         base64: canvas.toDataURL("image/jpeg", JPEG_QUALITY).split(",")[1],
+//         widthPx: cW,
+//         heightPx: cH,
+//       });
+//     };
+//     img.onerror = () => reject(new Error("Failed to load image"));
+//     img.src = src;
+//   });
+// }
+
+// In compressImage, make src absolute before loading:
+// async function compressImage(
+//   src: string, adminW?: number, adminH?: number,
+// ): Promise<CompressedImage> {
+//   // ← Convert relative URL to absolute
+//   const absoluteSrc = src.startsWith("http") || src.startsWith("data:")
+//     ? src
+//     : `${window.location.origin}${src.startsWith("/") ? "" : "/"}${src}`;
+
+//   return new Promise((resolve, reject) => {
+//     const img = new Image();
+//     img.crossOrigin = "anonymous"; // ← Required for canvas to read external images
+//     img.onload = () => {
+//       // ... rest unchanged
+//     };
+//     img.onerror = () => reject(new Error("Failed to load image"));
+//     img.src = absoluteSrc; // ← use absoluteSrc
+//   });
+// }
+
 async function compressImage(
   src: string, adminW?: number, adminH?: number,
 ): Promise<CompressedImage> {
+  // Convert relative URL to absolute
+  const absoluteSrc = src.startsWith("http") || src.startsWith("data:")
+    ? src
+    : `${window.location.origin}${src.startsWith("/") ? "" : "/"}${src}`;
+
   return new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => {
+      // ← THIS WAS MISSING — the actual logic was replaced with a comment
       const { naturalWidth: nW, naturalHeight: nH } = img;
       let cW: number, cH: number;
       if (adminW && adminH) { cW = adminW; cH = adminH; }
@@ -179,7 +243,7 @@ async function compressImage(
       });
     };
     img.onerror = () => reject(new Error("Failed to load image"));
-    img.src = src;
+    img.src = absoluteSrc;
   });
 }
 
@@ -332,94 +396,216 @@ function drawPageBackground(
 // HEADER
 // Draws:  headercurve.png (top-right wave)  +  logo (top-left)
 // ─────────────────────────────────────────────────────────────────────────────
+// function drawHeader(
+//   doc: import("jspdf").jsPDF,
+//   W: number,
+//   assets: Record<string, CachedAsset | null>,
+//   report: Report,
+// ): void {
+//   // 1. Header curve / wave image – spans top of page
+//   //    ── CHANGE "headercurve.png" to your actual relative path ──
+//   const curve = assets.curve; //assets["headercurve.png"];
+//   if (curve) {
+//     // Draw full-width at top; height = HDR_H
+//     doc.addImage(curve.base64, curve.format, 0, 0, W, HDR_H);
+//   } else {
+//     // Fallback: solid orange band
+//     doc.setFillColor(...C.orange);
+//     doc.rect(0, 0, W, HDR_H * 0.45, "F");
+//   }
+
+//   // 2. Logo  – top-left, vertically centred in header zone
+//   //    ── CHANGE "logo.png" to your actual relative path ──
+//   const logo = assets.logo; //assets["logo.png"];
+//   const logoW = 44;   // mm
+//   const logoX = 12;
+//   const logoY = 6;
+//   if (logo) {
+//     doc.addImage(logo.base64, logo.format, logoX, logoY, logoW, 0);
+//     // passing height=0 lets jsPDF auto-calculate from aspect ratio
+//   } else {
+//     // Text fallback
+//     doc.setFontSize(16);
+//     doc.setFont("NotoSans", "bold");
+//     doc.setTextColor(...C.orange);
+//     doc.text("COSMIC REMEDIES", logoX, logoY + 12);
+//     doc.setFontSize(8);
+//     doc.setFont("NotoSans", "normal");
+//     doc.setTextColor(...C.textMid);
+//     doc.text("& Dia", logoX, logoY + 20);
+//   }
+
+//   // 3. Thin separator line at bottom of header area
+//   doc.setDrawColor(...C.orange);
+//   doc.setLineWidth(0.6);
+//   doc.line(12, HDR_H, W - 12, HDR_H);
+
+
+
+//   // ── RIGHT SIDE: Report Title + Type ─────────────────────────
+//   const rightX = W - 14;
+
+//   // Report Title
+//   doc.setFont("NotoSans", "bold");
+//   doc.setFontSize(13);
+//   doc.setTextColor(0, 0, 0); // white over curve
+//   doc.text(report.title || "Report", rightX, 16, { align: "right" });
+
+//   // Report Type (smaller)
+//   doc.setFont("NotoSans", "normal");
+//   doc.setFontSize(9);
+//   doc.setTextColor(0, 0, 0);
+//   const reportType = (report as any).type || "Astrology Report";
+//   doc.text(reportType, rightX, 22, { align: "right" });
+
+
+//   // ── LEFT SIDE: Meta Info ─────────────────────────
+//   const metaX = 12;
+//   const metaY = HDR_H - 18;
+
+//   const now = new Date();
+//   const dateStr = now.toLocaleDateString();
+//   const timeStr = now.toLocaleTimeString();
+
+//   doc.setFont("NotoSans", "normal");
+//   doc.setFontSize(8);
+//   doc.setTextColor(...C.textDark);
+
+//   doc.text(`Date: ${dateStr}`, metaX, metaY);
+//   doc.text(`Time: ${timeStr}`, metaX, metaY + 5);
+
+//   if (report.userName) {
+//     doc.setFont("NotoSans", "bold");
+//     doc.text(`Client: ${report.userName}`, metaX, metaY + 10);
+//   }
+// }
 function drawHeader(
   doc: import("jspdf").jsPDF,
   W: number,
   assets: Record<string, CachedAsset | null>,
   report: Report,
+  customer?: Customer | null
 ): void {
-  // 1. Header curve / wave image – spans top of page
-  //    ── CHANGE "headercurve.png" to your actual relative path ──
-  const curve = assets.curve; //assets["headercurve.png"];
-  if (curve) {
-    // Draw full-width at top; height = HDR_H
-    doc.addImage(curve.base64, curve.format, 0, 0, W, HDR_H);
-  } else {
-    // Fallback: solid orange band
-    doc.setFillColor(...C.orange);
-    doc.rect(0, 0, W, HDR_H * 0.45, "F");
-  }
-
-  // 2. Logo  – top-left, vertically centred in header zone
-  //    ── CHANGE "logo.png" to your actual relative path ──
-  const logo = assets.logo; //assets["logo.png"];
-  const logoW = 44;   // mm
+  // NO curve image, NO orange band, NO separator line
+  // Just logo top-left
+  const logo = assets.logo;
+  const logoW = 44;
   const logoX = 12;
   const logoY = 6;
   if (logo) {
     doc.addImage(logo.base64, logo.format, logoX, logoY, logoW, 0);
-    // passing height=0 lets jsPDF auto-calculate from aspect ratio
   } else {
-    // Text fallback
     doc.setFontSize(16);
     doc.setFont("NotoSans", "bold");
-    doc.setTextColor(...C.orange);
+    doc.setTextColor(...C.textDark);   // ← was C.orange, now dark
     doc.text("COSMIC REMEDIES", logoX, logoY + 12);
-    doc.setFontSize(8);
-    doc.setFont("NotoSans", "normal");
-    doc.setTextColor(...C.textMid);
-    doc.text("& Dia", logoX, logoY + 20);
   }
 
-  // 3. Thin separator line at bottom of header area
-  doc.setDrawColor(...C.orange);
-  doc.setLineWidth(0.6);
-  doc.line(12, HDR_H, W - 12, HDR_H);
-
-
-
-  // ── RIGHT SIDE: Report Title + Type ─────────────────────────
+  // Report title — right side, dark text
   const rightX = W - 14;
-
-  // Report Title
   doc.setFont("NotoSans", "bold");
   doc.setFontSize(13);
-  doc.setTextColor(0, 0, 0); // white over curve
+  doc.setTextColor(...C.textDark);   // ← was white/black over curve
   doc.text(report.title || "Report", rightX, 16, { align: "right" });
 
-  // Report Type (smaller)
   doc.setFont("NotoSans", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(...C.textMid);
   const reportType = (report as any).type || "Astrology Report";
   doc.text(reportType, rightX, 22, { align: "right" });
 
-
-  // ── LEFT SIDE: Meta Info ─────────────────────────
+  // Meta info — left side
   const metaX = 12;
   const metaY = HDR_H - 18;
-
   const now = new Date();
-  const dateStr = now.toLocaleDateString();
-  const timeStr = now.toLocaleTimeString();
-
   doc.setFont("NotoSans", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...C.textDark);
-
-  doc.text(`Date: ${dateStr}`, metaX, metaY);
-  doc.text(`Time: ${timeStr}`, metaX, metaY + 5);
-
+  doc.text(`Date: ${now.toLocaleDateString()}`, metaX, metaY);
+  doc.text(`Time: ${now.toLocaleTimeString()}`, metaX, metaY + 5);
   if (report.userName) {
     doc.setFont("NotoSans", "bold");
-    doc.text(`Client: ${report.userName}`, metaX, metaY + 10);
+    doc.text(`Client: ${ report.userEmail}`, metaX, metaY + 10);
   }
+  // const clientName = customer?.name || customer?.fullName || report.userName || report.userEmail;
+  // if (clientName) {
+  //   doc.setFont("NotoSans", "bold");
+  //   doc.text(`Client: ${clientName}`, metaX, metaY + 10);
+  // }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FOOTER
 // Draws footerDesign.png spanning the bottom of the page + contact info
 // ─────────────────────────────────────────────────────────────────────────────
+// function drawFooter(
+//   doc: import("jspdf").jsPDF,
+//   W: number,
+//   H: number,
+//   pageNum: number,
+//   totalPages: number,
+//   assets: Record<string, CachedAsset | null>,
+//   report: Report,
+// ): void {
+//   const footerY = H - FOOT_H;
+
+//   // 1. Footer design image – spans full width at bottom
+//   //    ── CHANGE "footerDesign.png" to your actual relative path ──
+//   const footer = assets.footer; //assets["footerDesign.png"];
+//   if (footer) {
+//     doc.addImage(footer.base64, footer.format, 0, footerY, W, FOOT_H);
+//   } else {
+//     // Fallback: orange bar
+//     doc.setFillColor(...C.orange);
+//     doc.rect(0, footerY, W, FOOT_H, "F");
+//   }
+
+
+//   // ── CONTACT INFO ─────────────────────────
+//   doc.setFont("NotoSans", "normal");
+//   doc.setFontSize(7.5);
+//   doc.setTextColor(...C.footerText);
+
+//   // Center aligned contact block
+//   doc.text(
+//     "Cosmic Remedies Pvt. Ltd.",
+//     W / 2,
+//     H - 16,
+//     { align: "center" }
+//   );
+
+//   doc.text(
+//     "Kolkata, West Bengal, India",
+//     W / 2,
+//     H - 12,
+//     { align: "center" }
+//   );
+
+//   doc.text(
+//     "📞 +91-XXXXXXXXXX   |   ✉ support@cosmicremedies.com",
+//     W / 2,
+//     H - 8,
+//     { align: "center" }
+//   );
+
+//   // 2. Page number overlay – right-aligned in footer
+//   doc.setFontSize(7.5);
+//   doc.setFont("NotoSans", "bold");
+//   doc.setTextColor(...C.textDark);
+//   doc.text(
+//     `Page ${pageNum} of ${totalPages}`,
+//     W - 14,
+//     H - 6,
+//     { align: "right" },
+//   );
+
+//   // 3. Optional: confidential label left side
+//   doc.setFont("NotoSans", "normal");
+//   doc.setFontSize(7);
+//   doc.setTextColor(...C.textMid);
+//   doc.text("\u00A9 Cosmic Remedies \u2014 Confidential Report", 14, H - 6);
+// }
+
 function drawFooter(
   doc: import("jspdf").jsPDF,
   W: number,
@@ -428,64 +614,27 @@ function drawFooter(
   totalPages: number,
   assets: Record<string, CachedAsset | null>,
   report: Report,
-): void {
+) {
   const footerY = H - FOOT_H;
 
-  // 1. Footer design image – spans full width at bottom
-  //    ── CHANGE "footerDesign.png" to your actual relative path ──
-  const footer = assets.footer; //assets["footerDesign.png"];
-  if (footer) {
-    doc.addImage(footer.base64, footer.format, 0, footerY, W, FOOT_H);
-  } else {
-    // Fallback: orange bar
-    doc.setFillColor(...C.orange);
-    doc.rect(0, footerY, W, FOOT_H, "F");
-  }
-
-
-  // ── CONTACT INFO ─────────────────────────
+  // NO footer image, NO orange bar — just text on cream background
   doc.setFont("NotoSans", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...C.footerText);
 
-  // Center aligned contact block
-  doc.text(
-    "Cosmic Remedies Pvt. Ltd.",
-    W / 2,
-    H - 16,
-    { align: "center" }
-  );
+  doc.text("Cosmic Remedies Pvt. Ltd.", W / 2, H - 16, { align: "center" });
+  doc.text("Kolkata, West Bengal, India", W / 2, H - 12, { align: "center" });
+  doc.text("📞 +91-XXXXXXXXXX   |   ✉ support@cosmicremedies.com", W / 2, H - 8, { align: "center" });
 
-  doc.text(
-    "Kolkata, West Bengal, India",
-    W / 2,
-    H - 12,
-    { align: "center" }
-  );
-
-  doc.text(
-    "📞 +91-XXXXXXXXXX   |   ✉ support@cosmicremedies.com",
-    W / 2,
-    H - 8,
-    { align: "center" }
-  );
-
-  // 2. Page number overlay – right-aligned in footer
   doc.setFontSize(7.5);
   doc.setFont("NotoSans", "bold");
   doc.setTextColor(...C.textDark);
-  doc.text(
-    `Page ${pageNum} of ${totalPages}`,
-    W - 14,
-    H - 6,
-    { align: "right" },
-  );
+  doc.text(`Page ${pageNum} of ${totalPages}`, W - 14, H - 6, { align: "right" });
 
-  // 3. Optional: confidential label left side
   doc.setFont("NotoSans", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...C.textMid);
-  doc.text("\u00A9 Cosmic Remedies \u2014 Confidential Report", 14, H - 6);
+  doc.text("© Cosmic Remedies — Confidential Report", 14, H - 6);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -498,9 +647,10 @@ function decoratePage(
   H: number,
   assets: Record<string, CachedAsset | null>,
   report: Report,
+  customer?: Customer | null
 ): void {
   drawPageBackground(doc, W, H, assets);
-  drawHeader(doc, W, assets, report);
+  drawHeader(doc, W, assets, report, customer);
   // Footer is drawn at the very end after totalPages is known (see main export)
 }
 
@@ -513,7 +663,7 @@ function ensureSpace(
   needed: number,
   report: Report,
   assets: Record<string, CachedAsset | null>,
-  _customer?: Customer | null,
+  customer?: Customer | null,
 ): void {
   // const safeBottom = state.pageH - FOOT_H - 6;
   const safeBottom = state.pageH - FOOT_H - state.margin;
@@ -527,6 +677,75 @@ function ensureSpace(
 // ─────────────────────────────────────────────────────────────────────────────
 // TABLE RENDERER
 // ─────────────────────────────────────────────────────────────────────────────
+// function renderTable(
+//   doc: import("jspdf").jsPDF,
+//   rows: TableRow[],
+//   state: RenderState,
+//   report: Report,
+//   assets: Record<string, CachedAsset | null>,
+//   customer?: Customer | null,
+// ): void {
+//   if (!rows.length) return;
+//   const { margin, contentW } = state;
+
+//   const colCount = rows.reduce((max, row) =>
+//     Math.max(max, row.cells.reduce((s, c) => s + c.colspan, 0)), 0);
+//   if (!colCount) return;
+
+//   const colW = contentW / colCount;
+//   const cellPadX = 2.5;
+//   const cellPadY = 2;
+//   const lineH = 4.5;
+//   doc.setFontSize(8.5);
+
+//   rows.forEach((row, rowIndex) => {
+//     let maxLines = 1;
+//     row.cells.forEach(cell => {
+//       const cW = colW * cell.colspan - cellPadX * 2;
+//       const wrapped = doc.splitTextToSize(cell.text || " ", Math.max(cW, 8));
+//       if (wrapped.length > maxLines) maxLines = wrapped.length;
+//     });
+//     const rowH = maxLines * lineH + cellPadY * 2;
+//     ensureSpace(doc, state, rowH + 2, report, assets, customer);
+
+//     let colCursor = 0;
+//     row.cells.forEach(cell => {
+//       const x = margin + colCursor * colW;
+//       const w = colW * cell.colspan;
+
+//       if (row.isHeader || cell.bold)
+//         doc.setFillColor(...C.orange);
+//       else
+//         rowIndex % 2 === 0
+//           ? doc.setFillColor(...C.tableBgEven)
+//           : doc.setFillColor(255, 255, 255);
+//       doc.rect(x, state.y, w, rowH, "F");
+
+//       doc.setDrawColor(...C.clientBoxBdr);
+//       doc.setLineWidth(0.25);
+//       doc.rect(x, state.y, w, rowH, "S");
+
+//       if (row.isHeader || cell.bold) {
+//         doc.setFont("NotoSans", "bold");
+//         // doc.setTextColor(255, 255, 255);
+//         doc.setTextColor(0, 0, 0);
+//       } else {
+//         doc.setFont("NotoSans", "normal");
+//         doc.setTextColor(...C.textDark);
+//       }
+//       const cellW = w - cellPadX * 2;
+//       const wrapped = doc.splitTextToSize(cell.text || "", Math.max(cellW, 8));
+//       wrapped.forEach((line: string, li: number) => {
+//         doc.text(line, x + cellPadX, state.y + cellPadY + lineH * 0.8 + li * lineH);
+//       });
+
+//       colCursor += cell.colspan;
+//     });
+//     state.y += rowH;
+//   });
+//   state.y += 4;
+// }
+
 function renderTable(
   doc: import("jspdf").jsPDF,
   rows: TableRow[],
@@ -563,26 +782,23 @@ function renderTable(
       const x = margin + colCursor * colW;
       const w = colW * cell.colspan;
 
-      if (row.isHeader || cell.bold)
-        doc.setFillColor(...C.orange);
-      else
-        rowIndex % 2 === 0
-          ? doc.setFillColor(...C.tableBgEven)
-          : doc.setFillColor(255, 255, 255);
+      // ── All cells use the same cream background as the page body ──
+      doc.setFillColor(...C.pageBg);
       doc.rect(x, state.y, w, rowH, "F");
 
-      doc.setDrawColor(...C.clientBoxBdr);
-      doc.setLineWidth(0.25);
+      // ── Subtle border using soft golden-tan instead of orange ──
+      doc.setDrawColor(...C.textLight);
+      doc.setLineWidth(0.2);
       doc.rect(x, state.y, w, rowH, "S");
 
+      // ── Text: bold for headers, normal for body — all dark ──
       if (row.isHeader || cell.bold) {
         doc.setFont("NotoSans", "bold");
-        // doc.setTextColor(255, 255, 255);
-        doc.setTextColor(0, 0, 0);
       } else {
         doc.setFont("NotoSans", "normal");
-        doc.setTextColor(...C.textDark);
       }
+      doc.setTextColor(...C.textDark);
+
       const cellW = w - cellPadX * 2;
       const wrapped = doc.splitTextToSize(cell.text || "", Math.max(cellW, 8));
       wrapped.forEach((line: string, li: number) => {
@@ -676,51 +892,51 @@ export async function generateReportPDF(
   };
 
   // ── CLIENT DETAILS BOX ────────────────────────────────────────────────────
-  if (customer) {
-    ensureSpace(doc, state, 48, report, assets, customer);
+  // if (customer) {
+  //   ensureSpace(doc, state, 48, report, assets, customer);
 
-    const boxH = 42;
-    doc.setFillColor(...C.clientBoxBg);
-    doc.roundedRect(margin, state.y, contentW, boxH, 3, 3, "F");
-    doc.setDrawColor(...C.clientBoxBdr);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(margin, state.y, contentW, boxH, 3, 3, "S");
+  //   const boxH = 42;
+  //   doc.setFillColor(...C.clientBoxBg);
+  //   doc.roundedRect(margin, state.y, contentW, boxH, 3, 3, "F");
+  //   doc.setDrawColor(...C.clientBoxBdr);
+  //   doc.setLineWidth(0.4);
+  //   doc.roundedRect(margin, state.y, contentW, boxH, 3, 3, "S");
 
-    // Orange left stripe
-    doc.setFillColor(...C.orange);
-    doc.roundedRect(margin, state.y, 3.5, boxH, 1.5, 1.5, "F");
+  //   // Orange left stripe
+  //   doc.setFillColor(...C.orange);
+  //   doc.roundedRect(margin, state.y, 3.5, boxH, 1.5, 1.5, "F");
 
-    // Section label
-    doc.setFontSize(7.5);
-    doc.setFont("NotoSans", "bold");
-    doc.setTextColor(...C.textMid);
-    doc.text("\u2756  CLIENT DETAILS", margin + 8, state.y + 8);
+  //   // Section label
+  //   doc.setFontSize(7.5);
+  //   doc.setFont("NotoSans", "bold");
+  //   doc.setTextColor(...C.textMid);
+  //   doc.text("\u2756  CLIENT DETAILS", margin + 8, state.y + 8);
 
-    doc.setDrawColor(...C.clientBoxBdr);
-    doc.setLineWidth(0.2);
-    doc.line(margin + 8, state.y + 10, margin + contentW - 4, state.y + 10);
+  //   doc.setDrawColor(...C.clientBoxBdr);
+  //   doc.setLineWidth(0.2);
+  //   doc.line(margin + 8, state.y + 10, margin + contentW - 4, state.y + 10);
 
-    const col1 = margin + 8;
-    const col2 = margin + contentW / 2 + 4;
-    doc.setFontSize(9);
+  //   const col1 = margin + 8;
+  //   const col2 = margin + contentW / 2 + 4;
+  //   doc.setFontSize(9);
 
-    const field = (label: string, value: string, x: number, y: number) => {
-      doc.setFont("NotoSans", "bold");
-      doc.setTextColor(...C.textMid);
-      doc.text(label, x, y);
-      doc.setFont("NotoSans", "normal");
-      doc.setTextColor(...C.textDark);
-      doc.text(value, x + 14, y);
-    };
+  //   const field = (label: string, value: string, x: number, y: number) => {
+  //     doc.setFont("NotoSans", "bold");
+  //     doc.setTextColor(...C.textMid);
+  //     doc.text(label, x, y);
+  //     doc.setFont("NotoSans", "normal");
+  //     doc.setTextColor(...C.textDark);
+  //     doc.text(value, x + 14, y);
+  //   };
 
-    field("Name:", customer.name, col1, state.y + 18);
-    field("Email:", customer.email, col1, state.y + 27);
-    field("DOB:", customer.dob, col2, state.y + 18);
-    field("TOB:", customer.tob, col2, state.y + 27);
-    field("Place:", `${customer.pobCity}${customer.pobCountry ? ", " + customer.pobCountry : ""}`, col2, state.y + 36);
+  //   field("Name:", customer.name, col1, state.y + 18);
+  //   field("Email:", customer.email, col1, state.y + 27);
+  //   // field("DOB:", customer.dob, col2, state.y + 18);
+  //   // field("TOB:", customer.tob, col2, state.y + 27);
+  //   // field("Place:", `${customer.pobCity}${customer.pobCountry ? ", " + customer.pobCountry : ""}`, col2, state.y + 36);
 
-    state.y += boxH + 6;
-  }
+  //   state.y += boxH + 6;
+  // }
 
   // ── CONCERN BOX ───────────────────────────────────────────────────────────
   if (customer?.concern) {
