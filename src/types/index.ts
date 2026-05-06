@@ -15,23 +15,48 @@ export interface AdminUser {
 
 // ─── Platform User (logged-in users) ─────────────────────────────────────────
 
+// export interface PlatformUser {
+//   _id: string;
+//   name: string;
+//   email: string;
+//   phone: string;
+//   dob: string;
+//   tob: string;
+//   pobCity: string;
+//   pobCountry: string;
+//   currentCountry: string;
+//   concern: string;
+//   notes?: string;
+//   planName: string;
+//   status: "active" | "inactive";
+//   createdAt: string;
+//   lastLogin: string;
+//   avatarUrl?: string;
+// }
+
 export interface PlatformUser {
   _id: string;
-  name: string;
+  name?: string;
   email: string;
-  phone: string;
-  dob: string;
-  tob: string;
-  pobCity: string;
-  pobCountry: string;
-  currentCountry: string;
-  concern: string;
-  notes?: string;
-  planName: string;
-  status: "active" | "inactive";
-  createdAt: string;
-  lastLogin: string;
-  avatarUrl?: string;
+  password?: string;
+  role: "user" | "admin";
+  isGoogleAccount?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  __v?: number;
+  refreshToken?: string;
+  currentCountry?: string;
+  dob?: string;
+  gender?: string;
+  pobCity?: string;
+  pobCountry?: string;
+  tob?: string;
+  phone?: string;
+  // previously missing fields — now optional
+  concern?: string;
+  planName?: string;
+  status?: string;
+  lastLogin?: string;
 }
 
 // ─── Customer (paid plan) ─────────────────────────────────────────────────────

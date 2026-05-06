@@ -17,12 +17,13 @@ import { useUsersStore } from "@/store/useUsersStore";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
+  const [search, setSearch] = useState("");
   // const [allUsers, setAllUsers] = useState<PlatformUser[]>([]);
 
   const { users, loading, fetchUsers } = useUsersStore();
 
 
-  const allUsers = useUsersStore((state) => state.users);
+  const allUsers = users;
 
   useEffect(() => {
     fetchUsers(); // safe to call in multiple components — only hits API once
@@ -54,15 +55,27 @@ export default function UsersPage() {
 
   const filters = watch();
 
+  // const filtered = useMemo(() => {
+  //   return users.filter(u => {
+  //     const q = (filters.search ?? "").toLowerCase();
+  //     const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q);
+  //     // const matchPlan = filters.plan === "all" || u.planName === filters.plan;
+  //     // const matchStatus = filters.status === "all" || u.status === filters.status;
+  //     return matchSearch; // && matchPlan && matchStatus;
+  //   });
+  // }, [filters, allUsers]);
+
   const filtered = useMemo(() => {
-    return allUsers.filter(u => {
-      const q = (filters.search ?? "").toLowerCase();
-      const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone.toLowerCase().includes(q);
-      // const matchPlan = filters.plan === "all" || u.planName === filters.plan;
-      // const matchStatus = filters.status === "all" || u.status === filters.status;
-      return matchSearch; // && matchPlan && matchStatus;
+    return users.filter(u => {
+      const q = search.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        (u.name ?? "").toLowerCase().includes(q) ||
+        (u.email ?? "").toLowerCase().includes(q) ||
+        (u.phone ?? "").toLowerCase().includes(q)
+      );
     });
-  }, [filters, allUsers]);
+  }, [search, users]);
 
   return (
     <div className="space-y-5 animate-[fadeIn_0.4s_ease]">
@@ -83,7 +96,8 @@ export default function UsersPage() {
           <Input
             placeholder="Search name, email, phone…"
             icon={<Search size={14} />}
-            {...register("search")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
           {/* <Select
             options={[
