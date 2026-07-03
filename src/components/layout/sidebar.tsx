@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import {
   LayoutDashboard, Users, ShoppingBag, CreditCard,
-  FileText, PlusSquare, LogOut, Star, ChevronRight
+  FileText, PlusSquare, LogOut, Star, ChevronRight,
+  Crown
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -35,6 +36,7 @@ export function Sidebar() {
     { href: "/dashboard/transactions", label: "Transactions", icon: CreditCard },
     { href: "/dashboard/reports", label: "All Reports", icon: FileText },
     { href: "/dashboard/create-report", label: "Create Report", icon: PlusSquare },
+    { href: "/dashboard/subscription-plans", label: "Subscription Plans", icon: Crown, },
   ];
 
   const superAdminNavItems = [
