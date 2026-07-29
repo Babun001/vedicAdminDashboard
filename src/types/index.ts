@@ -151,3 +151,24 @@ export interface ReportFormData {
   template: ReportTemplate;
   adminNotes?: string;
 }
+
+
+// ─── Astrologer ───────────────────────────────────────────────────────────────
+
+export type ApprovalStatus = "pending" | "approved" | "rejected";
+
+export interface Astrologer {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  experience?: number;
+  expertise?: string[];
+  languages?: string[];
+  bio?: string;
+  profileImage?: string;
+  approvalStatus: ApprovalStatus;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}

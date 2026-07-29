@@ -43,6 +43,36 @@ export default function AdminsPage() {
     const [search, setSearch] = useState("");
     const [role, setRole] = useState("all");
 
+
+    useEffect(() => {
+        const fetchAstrologers = async () => {
+            console.log("entered in fetchastrologers")
+            try {
+                const res = await axiosInstance.get("/astrologers", {
+                    params: {
+                        approvalStatus: "pending",
+                        page: 1,
+                        limit: 20,
+                    },
+                });
+
+                console.log(
+                    "response from astrologer endpoint: ",
+                    res.data
+                );
+
+            } catch (error) {
+                console.error(
+                    "Error fetching astrologers:",
+                    error
+                );
+            }
+        };
+
+        fetchAstrologers();
+
+    }, []);
+
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
@@ -103,7 +133,7 @@ export default function AdminsPage() {
     return (
         <div className="space-y-5 animate-[fadeIn_0.4s_ease]">
 
-            
+
             {/* Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {summaryCards.map((c, index) => (
