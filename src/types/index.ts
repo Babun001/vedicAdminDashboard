@@ -58,6 +58,14 @@ export interface PlatformUser {
   planName?: string;
   status?: string;
   lastLogin?: string;
+  // Terms & conditions / cookie-consent acceptance timestamp — see the
+  // matching note in store/useUsersStore.ts for why several field-name
+  // variants are tried.
+  acceptedTermsAt?: string;
+  termsAcceptedAt?: string;
+  tosAcceptedAt?: string;
+  cookieConsentAt?: string;
+  consent?: { acceptedAt?: string; status?: string };
 }
 
 // ─── Customer (paid plan) ─────────────────────────────────────────────────────

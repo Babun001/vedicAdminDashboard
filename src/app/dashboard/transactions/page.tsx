@@ -1,51 +1,99 @@
 "use client";
 
-import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { transactionFilterSchema, type TransactionFilterSchema } from "@/lib/schemas";
-import { mockTransactions } from "@/lib/mock-data";
-import { formatCurrency, formatDateTime, getPlanColor, getStatusColor } from "@/lib/utils";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { formatCurrency, formatDateTime, getAssignmentStatusColor, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import axiosInstance from "@/services/admin.services";
+import { mapApiAssignment, type ApiAssignmentRow } from "../plan-assignments/data";
+import type { PlanAssignment, AssignmentStatus } from "../plan-assignments/types";
 import { Search, CreditCard, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 
+// This app doesn't have a separate "transactions" collection — every
+// purchase IS an assignment record (see plan-assignments/data.ts), so
+// /api/admin/assignments is the real source of transaction history. The
+// old version of this page read exclusively from mockTransactions, which
+// is an empty hardcoded array — hence "totally empty" regardless of how
+// many real purchases existed.
 export default function TransactionsPage() {
-  const { register, watch } = useForm<TransactionFilterSchema>({
-    resolver: zodResolver(transactionFilterSchema),
-    defaultValues: { search: "", status: "all", gateway: "all" },
-  });
+  const [assignments, setAssignments] = useState<PlanAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filters = watch();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | AssignmentStatus>("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "report" | "question">("all");
+
+  const fetchAssignments = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get("/assignments", { params: { limit: 500 } });
+      if (res.data.success) {
+        const rows: ApiAssignmentRow[] = res.data.data.assignments ?? [];
+        setAssignments(rows.map(mapApiAssignment));
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
+
+  useEffect(() => {
+    const streamUrl = `${axiosInstance.defaults.baseURL}/stream`;
+    const es = new EventSource(streamUrl, { withCredentials: true });
+    es.addEventListener("assignment-updated", () => fetchAssignments());
+    return () => es.close();
+  }, [fetchAssignments]);
 
   const filtered = useMemo(() => {
-    return mockTransactions.filter(t => {
-      const q = (filters.search ?? "").toLowerCase();
-      const matchSearch = !q || t.userName.toLowerCase().includes(q) || t.userEmail.toLowerCase().includes(q) || t.transactionRef.toLowerCase().includes(q);
-      const matchStatus = filters.status === "all" || t.status === filters.status;
-      const matchGateway = filters.gateway === "all" || t.gateway === filters.gateway;
-      return matchSearch && matchStatus && matchGateway;
+    const q = search.trim().toLowerCase();
+    return assignments.filter((a) => {
+      const matchSearch =
+        !q ||
+        a.userName.toLowerCase().includes(q) ||
+        a.userEmail.toLowerCase().includes(q) ||
+        a._id.toLowerCase().includes(q);
+      const matchStatus = statusFilter === "all" || a.status === statusFilter;
+      const matchType = typeFilter === "all" || (typeFilter === "question" ? a.planType === "question" : a.planType !== "question");
+      return matchSearch && matchStatus && matchType;
     });
-  }, [filters]);
+  }, [assignments, search, statusFilter, typeFilter]);
 
-  const totalRevenue = filtered.filter(t => t.status === "success").reduce((s, t) => s + t.amount, 0);
+  const totalRevenue = useMemo(
+    () => filtered.reduce((s, a) => s + (a.amount ?? 0), 0),
+    [filtered]
+  );
 
   const summaryCards = [
-    { label: "Total Revenue", value: formatCurrency(totalRevenue), icon: <CreditCard size={16} />, color: "text-gold-400" },
-    { label: "Successful", value: filtered.filter(t => t.status === "success").length, icon: <CheckCircle size={16} />, color: "text-jade-400" },
-    { label: "Pending", value: filtered.filter(t => t.status === "pending").length, icon: <Clock size={16} />, color: "text-gold-400" },
-    { label: "Failed/Refunded", value: filtered.filter(t => ["failed", "refunded"].includes(t.status)).length, icon: <XCircle size={16} />, color: "text-ember-400" },
+    { label: "Total Revenue", value: formatCurrency(totalRevenue), icon: <CreditCard size={16} />, color: "text-yellow-600" },
+    { label: "Delivered", value: filtered.filter((a) => a.status === "delivered").length, icon: <CheckCircle size={16} />, color: "text-green-600" },
+    { label: "In Progress", value: filtered.filter((a) => a.status === "pending" || a.status === "working").length, icon: <Clock size={16} />, color: "text-yellow-600" },
+    { label: "Cancelled", value: filtered.filter((a) => a.status === "cancelled").length, icon: <XCircle size={16} />, color: "text-red-600" },
   ];
 
-  const gatewayColors: Record<string, string> = {
-    razorpay: "text-cosmos-300 bg-cosmos-500/10 border-cosmos-500/20",
-    stripe: "text-gold-400 bg-gold-500/10 border-gold-500/20",
-    paypal: "text-jade-400 bg-jade-400/10 border-jade-400/20",
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+        Loading transactions…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 animate-[fadeIn_0.4s_ease]">
+
+      <div className="flex items-center justify-end">
+        <button
+          onClick={() => { setLoading(true); fetchAssignments(); }}
+          className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <RefreshCw size={12} /> Refresh
+        </button>
+      </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -54,9 +102,7 @@ export default function TransactionsPage() {
             key={c.label}
             className="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm"
           >
-            <span className={c.color.replace("text-", "text-").replace("-400", "-600")}>
-              {c.icon}
-            </span>
+            <span className={c.color}>{c.icon}</span>
             <div>
               <p className="text-[10px] text-gray-500 uppercase tracking-wider">
                 {c.label}
@@ -73,30 +119,32 @@ export default function TransactionsPage() {
       <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Input
-            placeholder="Search name, ref, email…"
+            placeholder="Search name, email, order id…"
             icon={<Search size={14} />}
-            {...register("search")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
 
           <Select
             options={[
               { value: "all", label: "All Status" },
-              { value: "success", label: "Success" },
               { value: "pending", label: "Pending" },
-              { value: "failed", label: "Failed" },
-              { value: "refunded", label: "Refunded" },
+              { value: "working", label: "Working" },
+              { value: "delivered", label: "Delivered" },
+              { value: "cancelled", label: "Cancelled" },
             ]}
-            {...register("status")}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "all" | AssignmentStatus)}
           />
 
           <Select
             options={[
-              { value: "all", label: "All Gateways" },
-              { value: "razorpay", label: "Razorpay" },
-              { value: "stripe", label: "Stripe" },
-              { value: "paypal", label: "PayPal" },
+              { value: "all", label: "All Types" },
+              { value: "report", label: "Report" },
+              { value: "question", label: "Question" },
             ]}
-            {...register("gateway")}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as "all" | "report" | "question")}
           />
         </div>
       </div>
@@ -108,7 +156,7 @@ export default function TransactionsPage() {
 
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                {["Transaction", "User", "Plan", "Amount", "Gateway", "Status", "Date"].map((h) => (
+                {["Transaction", "User", "Plan", "Amount", "Type", "Status", "Date"].map((h) => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] text-gray-500 font-body tracking-widest uppercase whitespace-nowrap"
@@ -127,81 +175,67 @@ export default function TransactionsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((tx) => (
+                filtered.map((a) => (
                   <tr
-                    key={tx.id}
+                    key={a._id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
                     {/* Transaction */}
                     <td className="px-4 py-3">
                       <p className="font-mono text-xs text-purple-600">
-                        {tx.transactionRef}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {tx.description}
+                        {a._id}
                       </p>
                     </td>
 
                     {/* User */}
                     <td className="px-4 py-3">
-                      <p className="text-gray-900 font-medium">
-                        {tx.userName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {tx.userEmail}
-                      </p>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-500 to-purple-500 flex items-center justify-center shrink-0">
+                          <span className="text-[10px] font-bold text-white">{getInitials(a.userName)}</span>
+                        </div>
+                        <div>
+                          <p className="text-gray-900 font-medium">{a.userName}</p>
+                          <p className="text-xs text-gray-500">{a.userEmail}</p>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Plan */}
                     <td className="px-4 py-3">
-                      <Badge className={getPlanColor(tx.plan)}>
-                        {tx.plan}
-                      </Badge>
+                      <span className="text-xs text-gray-700">{a.planName}</span>
                     </td>
 
                     {/* Amount */}
                     <td className="px-4 py-3">
                       <span
                         className={
-                          tx.amount > 0
+                          a.amount > 0
                             ? "text-yellow-600 font-semibold"
                             : "text-gray-400"
                         }
                       >
-                        {tx.amount > 0
-                          ? formatCurrency(tx.amount)
-                          : "Free"}
+                        {a.amount > 0 ? formatCurrency(a.amount) : "Free"}
                       </span>
                     </td>
 
-                    {/* Gateway */}
+                    {/* Type */}
                     <td className="px-4 py-3">
-                      <Badge
-                        className={
-                          tx.gateway === "razorpay"
-                            ? "text-purple-600 bg-purple-50 border border-purple-200"
-                            : tx.gateway === "stripe"
-                              ? "text-yellow-600 bg-yellow-50 border border-yellow-200"
-                              : tx.gateway === "paypal"
-                                ? "text-green-600 bg-green-50 border border-green-200"
-                                : "text-gray-600 bg-gray-100 border border-gray-200"
-                        }
-                      >
-                        {tx.gateway}
+                      <Badge className={a.planType === "question" ? "text-cosmos-300 bg-cosmos-500/10 border-cosmos-400/30" : "text-gold-400 bg-gold-400/10 border-gold-400/30"}>
+                        {a.planType === "question" ? "Question" : "Report"}
                       </Badge>
                     </td>
 
                     {/* Status */}
                     <td className="px-4 py-3">
-                      <Badge className={getStatusColor(tx.status)}>
-                        {tx.status}
+                      <Badge className={getAssignmentStatusColor(a.status)}>
+                        {a.status}
                       </Badge>
                     </td>
 
                     {/* Date */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <p className="text-xs text-gray-500">
-                        {formatDateTime(tx.createdAt)}
+                        {formatDateTime(a.purchasedAt)}
                       </p>
                     </td>
                   </tr>

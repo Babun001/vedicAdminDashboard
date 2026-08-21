@@ -59,10 +59,11 @@
     border-radius: 99px;
   }
 
-  ::selection {
-    /* background: rgba(124, 58, 237, 0.35); */
-    color: white;
-  }
+  /* NOTE: previously this set `color: white` with no background (the
+     background rule below was commented out), which made selected text
+     render as white-on-white / unreadable depending on the browser's
+     default highlight. Removed so text selection uses the browser's
+     normal default styling everywhere in the dashboard. */
 }
 
 html,

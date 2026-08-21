@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { mapApiAssignment, type ApiAssignmentRow } from "./data";
 import type { PlanAssignment, AssignmentStatus } from "./types";
+import type { Astrologer } from "@/types";
 
 // Re-render every 30s so "time taken so far" on live (pending/working) rows keeps ticking.
 const LIVE_TICK_MS = 30_000;
@@ -123,11 +124,18 @@ export default function PlanAssignmentsPage() {
 
   // Feature: total / online astrologer counts for this tab's header.
   const [onlineStatus, setOnlineStatus] = useState<{ total: number; approved: number; online: number } | null>(null);
+  // Same /astrologers/online-status call also returns the actual online
+  // astrologer list — kept separately so the reassign picker below can use
+  // it without re-fetching.
+  const [onlineAstrologers, setOnlineAstrologers] = useState<Astrologer[]>([]);
   useEffect(() => {
     const fetchOnlineStatus = async () => {
       try {
         const res = await axiosInstance.get("/astrologers/online-status");
-        if (res.data.success) setOnlineStatus(res.data.data);
+        if (res.data.success) {
+          setOnlineStatus(res.data.data);
+          setOnlineAstrologers(res.data.data.onlineAstrologers ?? []);
+        }
       } catch (error) {
         console.error("Error fetching online status:", error);
       }
@@ -159,14 +167,26 @@ export default function PlanAssignmentsPage() {
   const apiTypeFor = (a: PlanAssignment): "report" | "question" =>
     a.planType === "question" ? "question" : "report";
 
-  const handleReassign = async (a: PlanAssignment) => {
+  // Reassign picker: click the icon opens this instead of reassigning
+  // immediately — admin picks a specific online astrologer from the list.
+  const [reassignTarget, setReassignTarget] = useState<PlanAssignment | null>(null);
+
+  const openReassignPicker = (a: PlanAssignment) => setReassignTarget(a);
+  const closeReassignPicker = () => setReassignTarget(null);
+
+  const handleReassign = async (a: PlanAssignment, astrologerId?: string) => {
     setActingId(a._id);
     try {
       await axiosInstance.patch(`/assignments/${apiTypeFor(a)}/${a._id}/reassign`, {
         reason: "ADMIN_MANUAL",
+        // Backend picks the next available astrologer automatically when
+        // astrologerId is omitted. When the admin picks a specific online
+        // astrologer from the picker, we ask for that one by id instead.
+        ...(astrologerId && { astrologerId }),
       });
       await fetchAssignments();
       setSelected(null);
+      closeReassignPicker();
     } catch (error) {
       console.error("Error reassigning:", error);
     } finally {
@@ -479,7 +499,7 @@ export default function PlanAssignmentsPage() {
                           {(a.status === "pending" || a.status === "working") && (
                             <>
                               <button
-                                onClick={() => handleReassign(a)}
+                                onClick={() => openReassignPicker(a)}
                                 disabled={actingId === a._id}
                                 title="Reassign to another astrologer"
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
@@ -592,7 +612,7 @@ export default function PlanAssignmentsPage() {
             {(selected.status === "pending" || selected.status === "working") && (
               <div className="border-t border-gray-200 mt-4 pt-4 flex items-center gap-2">
                 <button
-                  onClick={() => handleReassign(selected)}
+                  onClick={() => openReassignPicker(selected)}
                   disabled={actingId === selected._id}
                   className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
@@ -615,6 +635,84 @@ export default function PlanAssignmentsPage() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Reassign picker — pick a specific online astrologer to hand the task to */}
+      <Modal open={!!reassignTarget} onClose={closeReassignPicker} size="md">
+        {reassignTarget && (
+          <div className="bg-white p-6 rounded-2xl">
+            <div className="flex items-start justify-between mb-1">
+              <h2 className="text-lg font-display font-semibold text-gray-900">Reassign to…</h2>
+              <button onClick={closeReassignPicker} className="text-gray-400 hover:text-gray-700 transition">
+                <XCircle size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              {reassignTarget.planName} for{" "}
+              <span className="font-medium text-gray-700">{reassignTarget.userName}</span>
+              {reassignTarget.astrologerName && (
+                <> — currently with <span className="font-medium text-gray-700">{reassignTarget.astrologerName}</span></>
+              )}
+            </p>
+
+            {onlineAstrologers.length === 0 ? (
+              <div className="text-center py-10 text-sm text-gray-400">
+                <Wifi size={20} className="mx-auto mb-2 text-gray-300" />
+                No astrologers are online right now.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[360px] overflow-y-auto">
+                {onlineAstrologers
+                  .filter((ast) => ast._id !== reassignTarget.astrologerId)
+                  .map((ast) => (
+                    <div
+                      key={ast._id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-yellow-500 flex items-center justify-center shrink-0 relative">
+                          <span className="text-xs font-bold text-white">{getInitials(ast.name)}</span>
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{ast.name}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {ast.expertise?.length ? ast.expertise.join(", ") : ast.email}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleReassign(reassignTarget, ast._id)}
+                        disabled={actingId === reassignTarget._id}
+                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#F5A703] text-black hover:bg-[#d48f02] transition-colors disabled:opacity-50"
+                      >
+                        {actingId === reassignTarget._id ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          "Assign"
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                {onlineAstrologers.filter((ast) => ast._id !== reassignTarget.astrologerId).length === 0 && (
+                  <div className="text-center py-10 text-sm text-gray-400">
+                    No other astrologers are online right now.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="border-t border-gray-200 mt-4 pt-4">
+              <button
+                onClick={() => handleReassign(reassignTarget)}
+                disabled={actingId === reassignTarget._id}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Or let the system auto-assign the next available astrologer
+              </button>
+            </div>
           </div>
         )}
       </Modal>

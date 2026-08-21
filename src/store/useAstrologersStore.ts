@@ -2,6 +2,44 @@ import { create } from "zustand";
 import axiosInstance from "@/services/admin.services";
 import type { Astrologer, ApprovalStatus } from "@/types";
 
+/** Normalizes an astrologer record coming from the backend onto the exact
+ *  field names this UI expects (experience, expertise, languages, bio).
+ *
+ *  Why this exists: experience/expertise/language/bio were rendering as
+ *  empty ("No expertise listed", "0 years", etc.) even for astrologers who
+ *  have real profile data — the backend response uses different field
+ *  names than this frontend originally assumed (e.g. "description" instead
+ *  of "bio", "specialization" instead of "expertise"). This maps every
+ *  plausible variant onto the canonical field so the UI just works
+ *  regardless of which one the API actually sends, without needing the
+ *  backend source to confirm the exact key first.
+ */
+function normalizeAstrologer(raw: any): Astrologer {
+  const experience =
+    raw.experience ?? raw.experienceYears ?? raw.yearsOfExperience ??
+    raw.years_of_experience ?? raw.totalExperience ?? raw.experienceInYears;
+
+  const expertise =
+    raw.expertise ?? raw.specialization ?? raw.specializations ??
+    raw.expertiseAreas ?? raw.skills ?? raw.areasOfExpertise;
+
+  const languages =
+    raw.languages ?? raw.languagesSpoken ?? raw.languagesKnown ??
+    raw.spokenLanguages ?? raw.language;
+
+  const bio =
+    raw.bio ?? raw.description ?? raw.about ?? raw.aboutMe ??
+    raw.summary ?? raw.profileDescription;
+
+  return {
+    ...raw,
+    experience: typeof experience === "number" ? experience : (experience ? Number(experience) : undefined),
+    expertise: Array.isArray(expertise) ? expertise : (typeof expertise === "string" && expertise ? expertise.split(",").map((s) => s.trim()) : undefined),
+    languages: Array.isArray(languages) ? languages : (typeof languages === "string" && languages ? languages.split(",").map((s) => s.trim()) : undefined),
+    bio: typeof bio === "string" ? bio : undefined,
+  };
+}
+
 interface AstrologersStore {
   astrologers: Astrologer[];
   loading: boolean;
@@ -35,7 +73,8 @@ export const useAstrologersStore = create<AstrologersStore>((set, get) => ({
       });
       if (res.data.success) {
         // handles either { data: { astrologers: [...] } } or { data: [...] }
-        set({ astrologers: res.data.data.astrologers ?? res.data.data ?? [] });
+        const rows = res.data.data.astrologers ?? res.data.data ?? [];
+        set({ astrologers: rows.map(normalizeAstrologer) });
       }
     } catch (error) {
       console.error("Error fetching astrologers:", error);
@@ -49,7 +88,13 @@ export const useAstrologersStore = create<AstrologersStore>((set, get) => ({
     try {
       const res = await axiosInstance.get("/astrologers/online-status");
       if (res.data.success) {
-        set({ onlineStatus: res.data.data });
+        const data = res.data.data;
+        set({
+          onlineStatus: {
+            ...data,
+            onlineAstrologers: (data.onlineAstrologers ?? []).map(normalizeAstrologer),
+          },
+        });
       }
     } catch (error) {
       console.error("Error fetching online status:", error);

@@ -94,11 +94,11 @@ export default function AstrologerDetailModal({ astrologer, onClose, onApprove, 
             </div>
           </div>
 
-          {/* Bio */}
+          {/* Description */}
           {a.bio && (
             <div>
               <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <FileText size={12} /> Bio
+                <FileText size={12} /> Description
               </p>
               <p className="text-sm text-gray-700 leading-relaxed">{a.bio}</p>
             </div>

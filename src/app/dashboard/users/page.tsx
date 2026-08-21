@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userFilterSchema, type UserFilterSchema } from "@/lib/schemas";
 import { mockUsers } from "@/lib/mock-data";
-import { formatDateTime, getPlanColor, getStatusColor, getInitials } from "@/lib/utils";
+import { formatDateTime, getPlanColor, getStatusColor, getInitials, getAcceptedTermsAt } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,8 +126,7 @@ export default function UsersPage() {
 
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                {/* ["User", "Contact", "Birth Details", "Concern", "Plan", "Status", "Last Login", "Actions"] */}
-                {["User", "Contact", "Birth Details", "Actions"].map(h => (
+                {["User", "Contact", "Account Created", "Accepted Terms & Conditions", "Actions"].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] text-gray-500 font-body tracking-widest uppercase whitespace-nowrap"
@@ -141,11 +140,13 @@ export default function UsersPage() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">
+                  <td colSpan={5} className="px-4 py-12 text-center text-gray-400 text-sm">
                     No users found
                   </td>
                 </tr>
-              ) : filtered.map((user) => (
+              ) : filtered.map((user) => {
+                const acceptedTermsAt = getAcceptedTermsAt(user);
+                return (
                 <tr
                   key={user._id}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
@@ -175,43 +176,21 @@ export default function UsersPage() {
                     <p className="text-gray-500 text-xs">{user.phone}</p>
                   </td>
 
-                  {/* Birth */}
-                  <td className="px-4 py-3">
-                    <p className="text-gray-700 text-xs whitespace-nowrap">
-                      {user.dob} · {user.tob}
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      {user.pobCity}, {user.pobCountry}
+                  {/* Account Created */}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <p className="text-gray-700 text-xs">
+                      {user.createdAt ? formatDateTime(user.createdAt) : "—"}
                     </p>
                   </td>
 
-                  {/* Concern */}
-                  {/* <td className="px-4 py-3 max-w-[160px]">
-                    <p className="text-gray-700 text-xs truncate">
-                      {user.concern}
-                    </p>
-                  </td> */}
-
-                  {/* Plan */}
-                  {/* <td className="px-4 py-3">
-                    <Badge className={getPlanColor(user.planName)}>
-                      {user.planName}
-                    </Badge>
-                  </td> */}
-
-                  {/* Status */}
-                  {/* <td className="px-4 py-3">
-                    <Badge className={getStatusColor(user.status)}>
-                      {user.status}
-                    </Badge>
-                  </td> */}
-
-                  {/* Last login */}
-                  {/* <td className="px-4 py-3 whitespace-nowrap">
-                    <p className="text-gray-500 text-xs">
-                      {formatDateTime(user.lastLogin)}
-                    </p>
-                  </td> */}
+                  {/* Accepted Terms & Conditions */}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {acceptedTermsAt ? (
+                      <p className="text-gray-700 text-xs">{formatDateTime(acceptedTermsAt)}</p>
+                    ) : (
+                      <p className="text-gray-400 text-xs italic">Not recorded</p>
+                    )}
+                  </td>
 
                   {/* Actions */}
                   <td className="px-4 py-3">
@@ -226,7 +205,7 @@ export default function UsersPage() {
                     </Button>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
 
           </table>

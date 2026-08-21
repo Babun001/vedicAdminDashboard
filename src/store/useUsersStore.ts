@@ -21,6 +21,16 @@ export interface User {
   pobCountry?: string;
   tob?: string;
   phone?: string;
+  // Terms & conditions / cookie-consent acceptance timestamp. Backend field
+  // name isn't confirmed yet — trying the plausible variants defensively so
+  // this starts working the moment the backend adds whichever one it uses,
+  // without another frontend change. Falls back to "Not recorded" in the UI
+  // if none of these are present in the API response.
+  acceptedTermsAt?: string;
+  termsAcceptedAt?: string;
+  tosAcceptedAt?: string;
+  cookieConsentAt?: string;
+  consent?: { acceptedAt?: string; status?: string };
 }
 
 // ─── Store ──────────────────────────────────────────────────────────────────

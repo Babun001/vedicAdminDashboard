@@ -111,3 +111,23 @@ export function getAssignmentStatusColor(status: string): string {
     default:          return "text-ink-200 bg-white/5 border-white/10";
   }
 }
+
+/** Resolves whichever terms/consent-acceptance field name the backend
+ *  actually sends (not confirmed yet — see the note in useUsersStore.ts),
+ *  so the UI just works once the backend adds one of these. */
+export function getAcceptedTermsAt(user: {
+  acceptedTermsAt?: string;
+  termsAcceptedAt?: string;
+  tosAcceptedAt?: string;
+  cookieConsentAt?: string;
+  consent?: { acceptedAt?: string; status?: string };
+}): string | null {
+  return (
+    user.acceptedTermsAt ??
+    user.termsAcceptedAt ??
+    user.tosAcceptedAt ??
+    user.cookieConsentAt ??
+    user.consent?.acceptedAt ??
+    null
+  );
+}

@@ -13,7 +13,7 @@ import { useAuthStore } from "@/store/auth-store";
 import {
   LayoutDashboard, Users, ShoppingBag, CreditCard,
   FileText, PlusSquare, LogOut, Star, ChevronRight,
-  Crown, HelpCircle, Zap
+  Crown, HelpCircle, Zap, Wallet
 } from "lucide-react";
 
 
@@ -44,6 +44,7 @@ export function Sidebar() {
     { href: "/dashboard/customers", label: "Orders", icon: ShoppingBag },
     { href: "/dashboard/plan-assignments", label: "Plan Assignments", icon: Zap },
     { href: "/dashboard/transactions", label: "Transactions", icon: CreditCard },
+    { href: "/dashboard/astrologer-earnings", label: "Astrologer Earnings", icon: Wallet },
     { href: "/dashboard/reports", label: "All Reports", icon: FileText },
     // { href: "/dashboard/create-report", label: "Create Report", icon: PlusSquare },
     { href: "/dashboard/subscription-plans", label: "Subscription Plans", icon: Crown, },
