@@ -4,7 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, twoFASchema, type LoginSchema, type TwoFASchema } from "@/lib/schemas";
+import {
+  loginSchema,
+  twoFASchema,
+  type LoginSchema,
+  type TwoFASchema,
+} from "@/lib/schemas";
 import { useAuthStore } from "@/store/auth-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,7 +68,6 @@ export default function LoginPage() {
   //   }
   // };
 
-
   const onCredentials = async (data: LoginSchema) => {
     try {
       const res = await axiosInstance.post("/login", data);
@@ -79,7 +83,6 @@ export default function LoginPage() {
 
       // 🔐 EXISTING ADMIN → verify 2FA
       if (response.data?.requiresTwoFactor) {
-
         console.log("2FA required. Temp token:", response.data);
         // setTempToken(response.data.tempToken);
         setStep("2fa");
@@ -89,14 +92,12 @@ export default function LoginPage() {
       // ✅ Normal login (rare case)
       login(response.data.admin);
       // router.push("/dashboard");
-
     } catch (err: any) {
       setError("email", {
         message: err.response?.data?.message || "Login failed",
       });
     }
   };
-
 
   const handleOtpChange = (idx: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -131,7 +132,6 @@ export default function LoginPage() {
 
       login(res.data.data.admin);
       router.push("/dashboard");
-
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       setOtpError(err.response?.data?.message || "Invalid OTP");
@@ -143,29 +143,27 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen starfield-bg flex items-center justify-center p-4 relative overflow-hidden">
-    <Image
-      src="/assets/compress2.png"
-      alt="logo"
-      className="bg-login-top"
-      width={170}
-      height={60}
-    />
-    <Image
-      src="/assets/compress2.png"
-      alt="logo"
-      className="bg-login-bottom"
-      width={170}
-      height={60}
-    />
+      <Image
+        src="/assets/compress2.png"
+        alt="logo"
+        className="bg-login-top"
+        width={170}
+        height={60}
+      />
+      <Image
+        src="/assets/compress2.png"
+        alt="logo"
+        className="bg-login-bottom"
+        width={170}
+        height={60}
+      />
       {/* Card */}
       <div className="relative w-full max-w-md">
         {/* Glow behind card */}
         <div className="absolute inset-0 blur-3xl" />
         <div className="login-card p-8">
-
           {/* Brand header */}
           <div className="text-center mb-8">
-
             <div className="logo-section flex items-center justify-center mb-4">
               <Image
                 src="/assets/astro-logo-1.png"
@@ -179,52 +177,71 @@ export default function LoginPage() {
               <Star size={28} className="text-white" fill="white" />
             </div> */}
             {/* <h1 className="text-3xl font-display font-bold text-white">Vedic Remedies</h1> */}
-            <p className="text-sm text-black/40 font-body mt-1 tracking-wide">Admin Portal</p>
+            {/* <div className="cr-login-title cr-shimmer-text">
+              Cosmic Remedies
+            </div> */}
+            <p className="cr-login-sub">Sign in to the Admin Portal</p>
           </div>
 
           {/* ── STEP 1: Credentials ── */}
           {step === "credentials" && (
-            <form onSubmit={handleSubmit(onCredentials)} className="">
+            <form onSubmit={handleSubmit(onCredentials)}>
               <div className="text-center mb-6">
-                <h2 className="text-xl font-display font-semibold text-black">Sign In</h2>
-                {/* <p className="text-xs text-black/40 mt-1">Use admin@vediccosmos.com / Admin@1234</p> */}
-              </div>
-              {/* <label className="block text-sm font-medium text-black">Email Address</label> */}
-              <input
-                // label="Email Address"
-                type="email"
-                className="login-input"
-                placeholder="admin@vediccosmos.com"
-                // icon={<Mail size={15} />}
-                // error={errors.email?.message}
-                {...register("email")}
-              />
-              {errors.email && <p className="text-xs text-ember-400">⚠ {errors.email.message}</p>}
-
-              <div className="space-y-1.5">
-                {/* <label className="block text-sm font-medium text-black">Password</label> */}
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-cosmos-400">
-                    {/* <Lock size={15} /> */}
-                  </div>
-                  <input
-                    type={showPass ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="login-input"
-                    {...register("password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass(p => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/50 hover:text-black/70 transition-colors"
-                  >
-                    {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-ember-400">⚠ {errors.password.message}</p>}
+                {/* <h2 className="text-xl font-display font-semibold text-black">
+                  Sign In
+                </h2> */}
               </div>
 
-              <Button type="submit" loading={isSubmitting} className="w-full mt-5 admin-btn admin-btn--google" size="lg">
+              {/* Email */}
+              <label className="cr-field-label">Email</label>
+
+              <div className="cr-field">
+                <Mail size={15} color="#9C8A6A" />
+
+                <input
+                  type="email"
+                  placeholder="admin@vediccosmos.com"
+                  {...register("email")}
+                />
+              </div>
+
+              {errors.email && (
+                <p className="text-xs text-ember-400 mt-1">
+                  ⚠ {errors.email.message}
+                </p>
+              )}
+
+              {/* Password */}
+              <label className="cr-field-label">Password</label>
+
+              <div className="cr-field">
+                <input
+                  type={showPass ? "text" : "password"}
+                  placeholder="••••••••"
+                  {...register("password")}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPass((p) => !p)}
+                  className="ml-auto text-black/50 hover:text-black/70 transition-colors"
+                >
+                  {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+
+              {errors.password && (
+                <p className="text-xs text-ember-400 mt-1">
+                  ⚠ {errors.password.message}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                className="cr-login-btn"
+                size="lg"
+              >
                 Continue to 2FA
               </Button>
             </form>
@@ -234,38 +251,50 @@ export default function LoginPage() {
           {step === "2fa" && (
             <div className="space-y-6">
               <div className="text-center">
-                <h2 className="text-xl font-display font-semibold text-black/90">Two-Factor Auth</h2>
+                <h2 className="text-xl font-display font-semibold text-black/90">
+                  Two-Factor Auth
+                </h2>
+
                 <p className="text-sm text-black/40 mt-1">
                   Enter the 6-digit code from your authenticator
                 </p>
-                {/* <p className="text-xs text-[#E97E11]/70 mt-1">Demo code: <span className="font-mono font-bold text-[#E97E11]">123456</span></p> */}
               </div>
 
-              {/* OTP inputs */}
-              <div className="flex gap-2 justify-center">
-                {otp.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={el => { otpRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={e => handleOtpChange(i, e.target.value)}
-                    onKeyDown={e => handleOtpKeyDown(i, e)}
-                    className="otp-input"
-                  />
-                ))}
+              {/* OTP */}
+              <div>
+                <label className="cr-field-label text-center block">
+                  Authentication Code
+                </label>
+
+                <div className="flex gap-2 justify-center">
+                  {otp.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        otpRefs.current[i] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      className="otp-input"
+                    />
+                  ))}
+                </div>
               </div>
 
               {otpError && (
-                <p className="text-xs text-ember-400 text-center">⚠ {otpError}</p>
+                <p className="text-xs text-ember-400 text-center">
+                  ⚠ {otpError}
+                </p>
               )}
 
               <Button
                 onClick={handleVerify2FA}
                 loading={otpLoading}
-                className="w-full mt-6 admin-btn admin-btn--google"
+                className="cr-login-btn"
                 size="lg"
               >
                 <Shield size={15} />
@@ -273,7 +302,11 @@ export default function LoginPage() {
               </Button>
 
               <button
-                onClick={() => { setStep("credentials"); setOtp(["", "", "", "", "", ""]); }}
+                type="button"
+                onClick={() => {
+                  setStep("credentials");
+                  setOtp(["", "", "", "", "", ""]);
+                }}
                 className="w-full text-sm text-black/40 hover:text-black/70 transition-colors"
               >
                 ← Back to login
