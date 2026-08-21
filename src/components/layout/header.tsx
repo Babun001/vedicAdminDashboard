@@ -28,6 +28,7 @@ export function Header() {
     "/dashboard": { title: "Overview", subtitle: `Welcome back, ${user?.name || "Admin"}` },
     "/dashboard/users": { title: "Users", subtitle: "All registered users" },
     "/dashboard/customers": { title: "Customers", subtitle: "Paid plan subscribers" },
+    "/dashboard/plan-assignments": { title: "Plan Assignments", subtitle: "Auto-assigned astrologer tasks & progress" },
     "/dashboard/transactions": { title: "Transactions", subtitle: "Payment history" },
     "/dashboard/reports": { title: "Reports", subtitle: "All astrology reports" },
     "/dashboard/create-report": { title: "Create Report", subtitle: "Compose & send a new report" },

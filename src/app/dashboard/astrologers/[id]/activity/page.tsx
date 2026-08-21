@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/services/admin.services";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Star, Clock, FileText, RotateCcw, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+    ArrowLeft, Star, Clock, FileText, RotateCcw, TrendingUp, CheckCircle2,
+    IndianRupee, HelpCircle, Receipt,
+} from "lucide-react";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
+// import SettlePayoutModal from "../../components/SettlePayoutModal";
+import SettlePayoutModal from "../../components/SettlePayoutModal";
 
 interface SessionsData {
     sessions: any[];
@@ -28,6 +35,26 @@ interface ReportsData {
     stats: { deliveredCount: number; onTimeRate: number | null; rejectionRate: number };
 }
 
+interface PayoutDetail {
+    astrologer: { _id: string; name: string; perAnswerRate: number; totalQuestionsAnswered: number };
+    currency: string;
+    unpaid: {
+        count: number;
+        amount: number;
+        questions: { _id: string; questionText: string; answeredAt: string; payoutRate: number }[];
+    };
+    paid: { count: number; amount: number };
+    batches: {
+        _id: string;
+        totalAmount: number;
+        questionCount: number;
+        paidAt: string;
+        paymentReference?: string;
+        note?: string;
+        paidBy?: { name?: string; email?: string };
+    }[];
+}
+
 const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -42,7 +69,23 @@ export default function AstrologerActivityPage() {
     const [sessions, setSessions] = useState<SessionsData | null>(null);
     const [efficiency, setEfficiency] = useState<EfficiencyData | null>(null);
     const [reportsData, setReportsData] = useState<ReportsData | null>(null);
+    const [payout, setPayout] = useState<PayoutDetail | null>(null);
     const [loading, setLoading] = useState(true);
+    const [payoutError, setPayoutError] = useState<string | null>(null);
+
+    const [settleModalOpen, setSettleModalOpen] = useState(false);
+    const [settling, setSettling] = useState(false);
+
+    const fetchPayout = useCallback(async () => {
+        try {
+            const res = await axiosInstance.get(`/payouts/astrologer/${id}`);
+            setPayout(res.data.data);
+            setPayoutError(null);
+        } catch (error) {
+            console.error("Error fetching astrologer payout:", error);
+            setPayoutError("Couldn't load payout data.");
+        }
+    }, [id]);
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -52,6 +95,7 @@ export default function AstrologerActivityPage() {
                     axiosInstance.get(`/astrologers/${id}/sessions`),
                     axiosInstance.get(`/astrologers/${id}/efficiency`),
                     axiosInstance.get(`/astrologers/${id}/reports`),
+                    fetchPayout(),
                 ]);
                 setSessions(sessionsRes.data.data);
                 setEfficiency(efficiencyRes.data.data);
@@ -63,7 +107,25 @@ export default function AstrologerActivityPage() {
             }
         };
         fetchAll();
-    }, [id]);
+    }, [id, fetchPayout]);
+
+    const handleSettle = async (paymentReference: string, note: string) => {
+        setSettling(true);
+        try {
+            await axiosInstance.post("/payouts/settle", {
+                astrologerId: id,
+                ...(paymentReference && { paymentReference }),
+                ...(note && { note }),
+            });
+            await fetchPayout();
+            setSettleModalOpen(false);
+        } catch (error: any) {
+            console.error("Error settling payout:", error);
+            setPayoutError(error?.response?.data?.message || "Failed to settle payout.");
+        } finally {
+            setSettling(false);
+        }
+    };
 
     const reviewBadge = (report: any) => {
         if (report.adminReview?.status === "approved")
@@ -138,6 +200,115 @@ export default function AstrologerActivityPage() {
                 </div>
             </div>
 
+            {/* Payout / Earnings */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-2 font-medium text-gray-900 text-sm">
+                        <IndianRupee size={15} /> Payout
+                    </div>
+                    {payout && payout.unpaid.amount > 0 && (
+                        <Button size="sm" variant="gold" onClick={() => setSettleModalOpen(true)}>
+                            <IndianRupee size={13} /> Mark as Paid
+                        </Button>
+                    )}
+                </div>
+
+                {payoutError && (
+                    <div className="px-4 py-3 text-sm text-red-600 bg-red-50 border-b border-red-100">
+                        {payoutError}
+                    </div>
+                )}
+
+                {!payout ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">Loading payout data…</div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
+                            <div className="text-center">
+                                <p className="text-xl font-bold text-gray-900">
+                                    {formatCurrency(payout.paid.amount + payout.unpaid.amount)}
+                                </p>
+                                <p className="text-xs text-gray-500">Total earned</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xl font-bold text-green-700">{formatCurrency(payout.paid.amount)}</p>
+                                <p className="text-xs text-gray-500">Paid ({payout.paid.count})</p>
+                            </div>
+                            <div className="text-center">
+                                <p className={`text-xl font-bold ${payout.unpaid.amount > 0 ? "text-yellow-600" : "text-gray-900"}`}>
+                                    {formatCurrency(payout.unpaid.amount)}
+                                </p>
+                                <p className="text-xs text-gray-500">Pending ({payout.unpaid.count})</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xl font-bold text-gray-900">{formatCurrency(payout.astrologer.perAnswerRate)}</p>
+                                <p className="text-xs text-gray-500">Current rate / answer</p>
+                            </div>
+                        </div>
+
+                        {/* Unpaid questions awaiting settlement */}
+                        {payout.unpaid.questions.length > 0 && (
+                            <div className="border-t border-gray-100">
+                                <div className="px-4 pt-3 pb-1 text-[10px] text-gray-500 font-body tracking-widest uppercase flex items-center gap-1">
+                                    <HelpCircle size={11} /> Unpaid Answers
+                                </div>
+                                <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                                    {payout.unpaid.questions.map((q) => (
+                                        <div key={q._id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-gray-800 truncate max-w-[360px]">{q.questionText}</p>
+                                                <p className="text-[11px] text-gray-400">
+                                                    Answered {formatDateTime(q.answeredAt)}
+                                                </p>
+                                            </div>
+                                            <span className="text-xs font-medium text-gray-900 shrink-0">
+                                                {formatCurrency(q.payoutRate)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Settlement history */}
+                        {payout.batches.length > 0 && (
+                            <div className="border-t border-gray-100">
+                                <div className="px-4 pt-3 pb-1 text-[10px] text-gray-500 font-body tracking-widest uppercase flex items-center gap-1">
+                                    <Receipt size={11} /> Settlement History
+                                </div>
+                                <div className="divide-y divide-gray-100">
+                                    {payout.batches.map((b) => (
+                                        <div key={b._id} className="px-4 py-2.5">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-gray-800">
+                                                    {formatDateTime(b.paidAt)} · {b.questionCount} answer{b.questionCount === 1 ? "" : "s"}
+                                                </span>
+                                                <span className="text-xs font-semibold text-green-700">
+                                                    {formatCurrency(b.totalAmount)}
+                                                </span>
+                                            </div>
+                                            {(b.paymentReference || b.note || b.paidBy?.name) && (
+                                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                                    {b.paidBy?.name && <>Paid by {b.paidBy.name}</>}
+                                                    {b.paymentReference && <> · Ref: {b.paymentReference}</>}
+                                                    {b.note && <> · {b.note}</>}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {payout.unpaid.count === 0 && payout.batches.length === 0 && (
+                            <div className="p-6 text-center text-gray-400 text-sm">
+                                No answered questions yet — nothing earned so far.
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+
             {/* Report history */}
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-gray-100 font-medium text-gray-900 flex items-center gap-2">
@@ -178,6 +349,18 @@ export default function AstrologerActivityPage() {
                     ))}
                 </div>
             </div>
+
+            {payout && (
+                <SettlePayoutModal
+                    open={settleModalOpen}
+                    astrologerName={payout.astrologer.name}
+                    unpaidAmount={payout.unpaid.amount}
+                    unpaidCount={payout.unpaid.count}
+                    loading={settling}
+                    onClose={() => setSettleModalOpen(false)}
+                    onConfirm={handleSettle}
+                />
+            )}
         </div>
     );
 }

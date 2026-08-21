@@ -4,11 +4,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+// import {
+//   LayoutDashboard, Users, ShoppingBag, CreditCard,
+//   FileText, PlusSquare, LogOut, Star, ChevronRight,
+//   Crown
+// } from "lucide-react";
+
 import {
   LayoutDashboard, Users, ShoppingBag, CreditCard,
   FileText, PlusSquare, LogOut, Star, ChevronRight,
-  Crown
+  Crown, HelpCircle, Zap
 } from "lucide-react";
+
+
 import Image from "next/image";
 import { useEffect } from "react";
 
@@ -34,10 +42,12 @@ export function Sidebar() {
     { href: "/dashboard/users", label: "Users", icon: Users },
     { href: "/dashboard/astrologers", label: "Astrologers", icon: Star }, 
     { href: "/dashboard/customers", label: "Orders", icon: ShoppingBag },
+    { href: "/dashboard/plan-assignments", label: "Plan Assignments", icon: Zap },
     { href: "/dashboard/transactions", label: "Transactions", icon: CreditCard },
     { href: "/dashboard/reports", label: "All Reports", icon: FileText },
     // { href: "/dashboard/create-report", label: "Create Report", icon: PlusSquare },
     { href: "/dashboard/subscription-plans", label: "Subscription Plans", icon: Crown, },
+    { href: "/dashboard/question-plans", label: "Question Plans", icon: HelpCircle, },
   ];
 
   const superAdminNavItems = [

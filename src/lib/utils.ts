@@ -83,3 +83,31 @@ export function getReportStatusColor(status: string): string {
 export function generateMockTOTP(): string {
   return "123456";
 }
+
+// ─── Duration helpers ─────────────────────────────────────────────────────
+
+/** Seconds between two ISO timestamps (end defaults to now). */
+export function secondsBetween(startIso: string, endIso?: string): number {
+  const start = new Date(startIso).getTime();
+  const end = endIso ? new Date(endIso).getTime() : Date.now();
+  return Math.max(0, Math.floor((end - start) / 1000));
+}
+
+/** "2h 14m" / "45m" / "< 1m" style duration label. */
+export function formatDuration(seconds: number): string {
+  if (seconds < 60) return "< 1m";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
+export function getAssignmentStatusColor(status: string): string {
+  switch (status) {
+    case "delivered": return "text-jade-400 bg-jade-400/10 border-jade-400/30";
+    case "working":   return "text-cosmos-300 bg-cosmos-400/10 border-cosmos-400/30";
+    case "pending":   return "text-gold-400 bg-gold-400/10 border-gold-400/30";
+    case "cancelled": return "text-ember-400 bg-ember-400/10 border-ember-400/30";
+    default:          return "text-ink-200 bg-white/5 border-white/10";
+  }
+}

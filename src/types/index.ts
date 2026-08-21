@@ -169,6 +169,27 @@ export interface Astrologer {
   profileImage?: string;
   approvalStatus: ApprovalStatus;
   isActive: boolean;
+  isOnline?: boolean;
   createdAt: string;
   updatedAt?: string;
+
+  // Payout rates (self-declared by astrologer, admin-bounded)
+  reportRate?: number;
+  questionRate1?: number;
+  questionRate2?: number;
+  questionRate3?: number;
+  perAnswerRate?: number;
+
+  // Performance / efficacy — useful context in the detail view before
+  // approve/reject, and on an already-approved astrologer's profile.
+  efficacyScore?: number;
+  avgRating?: number;
+  totalRatings?: number;
+  totalReportsAssigned?: number;
+  totalReportsDelivered?: number;
+  totalQuestionsAssigned?: number;
+  totalQuestionsAnswered?: number;
+  lastLoginAt?: string;
+  lastLogoutAt?: string;
+  rejectionReason?: string;
 }

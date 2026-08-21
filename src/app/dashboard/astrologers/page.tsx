@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Star, CheckCircle2, XCircle, Power, PowerOff, Clock } from "lucide-react";
+import { Search, Star, CheckCircle2, XCircle, Power, PowerOff, Clock, Users, Wifi, ShieldCheck, Eye, RefreshCw } from "lucide-react";
 import { useAstrologersStore } from "@/store/useAstrologersStore";
 import ConfirmActionModal from "./components/ConfirmActionModal";
+import AstrologerDetailModal from "./components/AstrologerDetailModal";
 import type { Astrologer, ApprovalStatus } from "@/types";
 
 import { useRouter } from "next/navigation";
@@ -20,7 +21,10 @@ type ActionType = "approve" | "reject" | "activate" | "deactivate";
 export default function AstrologersPage() {
 
     const router = useRouter();
-    const { astrologers, loading, actionLoadingId, fetchAstrologers, approveAstrologer, rejectAstrologer, activateAstrologer, deactivateAstrologer } =
+    const {
+        astrologers, loading, actionLoadingId, onlineStatus, onlineStatusLoading,
+        fetchAstrologers, fetchOnlineStatus, approveAstrologer, rejectAstrologer, activateAstrologer, deactivateAstrologer,
+    } =
         useAstrologersStore();
 
     const [tab, setTab] = useState<Tab>("pending");
@@ -28,9 +32,15 @@ export default function AstrologersPage() {
 
     const [modalAstrologer, setModalAstrologer] = useState<Astrologer | null>(null);
     const [modalAction, setModalAction] = useState<ActionType | null>(null);
+    const [detailAstrologer, setDetailAstrologer] = useState<Astrologer | null>(null);
 
     useEffect(() => {
         fetchAstrologers("all");
+        fetchOnlineStatus();
+        // Online status changes independently of the astrologer list
+        // (login/logout, not approve/reject) — refresh it on its own cadence.
+        const id = setInterval(fetchOnlineStatus, 30_000);
+        return () => clearInterval(id);
     }, []);
 
     const filtered = useMemo(() => {
@@ -99,7 +109,50 @@ export default function AstrologersPage() {
                     <Star size={18} className="text-gray-600" />
                     <span className="text-gray-500 text-sm">{filtered.length} astrologers found</span>
                 </div>
+                <button
+                    onClick={fetchOnlineStatus}
+                    className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
+                >
+                    <RefreshCw size={12} className={onlineStatusLoading ? "animate-spin" : ""} /> Refresh online status
+                </button>
             </div>
+
+            {/* Online-status cards */}
+            <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-2.5 shadow-sm">
+                    <Users size={16} className="text-gray-500" />
+                    <div>
+                        <p className="text-[11px] text-gray-500">Total Astrologers</p>
+                        <p className="text-base font-display font-bold text-gray-900">{onlineStatus?.total ?? "—"}</p>
+                    </div>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-2.5 shadow-sm">
+                    <ShieldCheck size={16} className="text-purple-600" />
+                    <div>
+                        <p className="text-[11px] text-gray-500">Approved</p>
+                        <p className="text-base font-display font-bold text-gray-900">{onlineStatus?.approved ?? "—"}</p>
+                    </div>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-2.5 shadow-sm">
+                    <Wifi size={16} className="text-green-600" />
+                    <div>
+                        <p className="text-[11px] text-gray-500">Online Now</p>
+                        <p className="text-base font-display font-bold text-gray-900">{onlineStatus?.online ?? "—"}</p>
+                    </div>
+                </div>
+            </div>
+
+            {onlineStatus && onlineStatus.online > 0 && (
+                <div className="flex flex-wrap items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 text-xs">
+                    <span className="text-green-700 font-medium shrink-0">Online now:</span>
+                    {onlineStatus.onlineAstrologers.map((a) => (
+                        <span key={a._id} className="inline-flex items-center gap-1 bg-white border border-green-200 rounded-lg px-2 py-1 text-green-800">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            {a.name}
+                        </span>
+                    ))}
+                </div>
+            )}
 
             {/* Tabs */}
             <div className="flex flex-wrap gap-2">
@@ -211,6 +264,14 @@ export default function AstrologersPage() {
                                             {/* Actions */}
                                             <td className="px-4 py-3">
                                                 <div className="flex flex-wrap gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => setDetailAstrologer(a)}
+                                                    >
+                                                        <Eye size={13} /> View Details
+                                                    </Button>
+
                                                     {a.approvalStatus === "pending" && (
                                                         <>
                                                             <Button
@@ -257,6 +318,9 @@ export default function AstrologersPage() {
 
                                                     <Button
                                                         size="sm"
+                                                        style={{
+                                                            background: "mediumturquoise",
+                                                        }}
                                                         variant="secondary"
                                                         onClick={() => router.push(`/dashboard/astrologers/${a._id}/activity`)}
                                                     >
@@ -281,6 +345,21 @@ export default function AstrologersPage() {
                 onClose={closeConfirm}
                 onConfirm={handleConfirm}
             />
+
+            {detailAstrologer && (
+                <AstrologerDetailModal
+                    astrologer={detailAstrologer}
+                    onClose={() => setDetailAstrologer(null)}
+                    onApprove={() => {
+                        openConfirm(detailAstrologer, "approve");
+                        setDetailAstrologer(null);
+                    }}
+                    onReject={() => {
+                        openConfirm(detailAstrologer, "reject");
+                        setDetailAstrologer(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

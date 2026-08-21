@@ -6,7 +6,10 @@ interface AstrologersStore {
   astrologers: Astrologer[];
   loading: boolean;
   actionLoadingId: string | null;
+  onlineStatus: { total: number; approved: number; online: number; onlineAstrologers: Astrologer[] } | null;
+  onlineStatusLoading: boolean;
   fetchAstrologers: (approvalStatus?: ApprovalStatus | "all") => Promise<void>;
+  fetchOnlineStatus: () => Promise<void>;
   approveAstrologer: (id: string) => Promise<void>;
   rejectAstrologer: (id: string) => Promise<void>;
   activateAstrologer: (id: string) => Promise<void>;
@@ -17,6 +20,8 @@ export const useAstrologersStore = create<AstrologersStore>((set, get) => ({
   astrologers: [],
   loading: false,
   actionLoadingId: null,
+  onlineStatus: null,
+  onlineStatusLoading: false,
 
   fetchAstrologers: async (approvalStatus = "all") => {
     set({ loading: true });
@@ -36,6 +41,20 @@ export const useAstrologersStore = create<AstrologersStore>((set, get) => ({
       console.error("Error fetching astrologers:", error);
     } finally {
       set({ loading: false });
+    }
+  },
+
+  fetchOnlineStatus: async () => {
+    set({ onlineStatusLoading: true });
+    try {
+      const res = await axiosInstance.get("/astrologers/online-status");
+      if (res.data.success) {
+        set({ onlineStatus: res.data.data });
+      }
+    } catch (error) {
+      console.error("Error fetching online status:", error);
+    } finally {
+      set({ onlineStatusLoading: false });
     }
   },
 
@@ -76,7 +95,11 @@ export const useAstrologersStore = create<AstrologersStore>((set, get) => ({
   activateAstrologer: async (id) => {
     set({ actionLoadingId: id });
     try {
-      await axiosInstance.patch(`/astrologers/${id}/activate`);
+      // NOTE: backend only exposes PATCH /astrologers/:id/active-state
+      // with { isActive } in the body — there's no separate /activate
+      // route. Fixed here (was previously calling a route that doesn't
+      // exist on the backend).
+      await axiosInstance.patch(`/astrologers/${id}/active-state`, { isActive: true });
       set((state) => ({
         astrologers: state.astrologers.map((a) =>
           a._id === id ? { ...a, isActive: true } : a
@@ -93,7 +116,7 @@ export const useAstrologersStore = create<AstrologersStore>((set, get) => ({
   deactivateAstrologer: async (id) => {
     set({ actionLoadingId: id });
     try {
-      await axiosInstance.patch(`/astrologers/${id}/deactivate`);
+      await axiosInstance.patch(`/astrologers/${id}/active-state`, { isActive: false });
       set((state) => ({
         astrologers: state.astrologers.map((a) =>
           a._id === id ? { ...a, isActive: false } : a
